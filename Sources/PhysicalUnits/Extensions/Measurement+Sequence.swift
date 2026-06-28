@@ -61,9 +61,14 @@ extension Collection {
 extension Measurement where UnitType: Unit {
     /// 整数リテラルから基準単位で初期化
     ///
-    /// ## 注意
-    /// この初期化子は基準単位（gram, meter, second, joule）を使用します。
-    /// 明示的な単位指定を推奨します。
+    /// 値は基準単位（`MassUnit` なら gram、`LengthUnit` なら meter）として解釈されます。
+    /// 明示的な単位指定（`Mass(70, unit: .kilograms)` など）を推奨します。
+    ///
+    /// ## 設計上の制限
+    /// `ExpressibleByIntegerLiteral` 準拠は `MassUnit` と `LengthUnit` のみに限定しています。
+    /// 理由: Swift のプロトコル準拠は型単位（`Measurement<UnitType>` ごと）に必要であり、
+    /// 全次元に追加するとリテラル `0` の型推論があいまいになります。
+    /// 必要な次元は都度 `Measurement<SomeUnit>(baseValue: Double(n))` で初期化してください。
     @inlinable
     public init(integerLiteral value: Int) where UnitType == MassUnit {
         self.init(baseValue: Double(value))

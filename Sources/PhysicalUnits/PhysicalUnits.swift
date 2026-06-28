@@ -66,6 +66,27 @@
 /// let avg = samples.average()    // 1.5kg
 /// ```
 ///
+/// ## 物理演算子
+///
+/// 次元をまたいだ物理公式を演算子として提供します。
+///
+/// ```swift
+/// // 運動学: 距離 = 速度 × 時間
+/// let speed = Speed(60, unit: .kilometersPerHour)
+/// let time = Duration(2, unit: .hours)
+/// let distance: Length = speed * time  // 120 km
+///
+/// // 電気: 電力 = 電圧 × 電流 (P = V × I)
+/// let voltage = Voltage(100, unit: .volts)
+/// let current = Current(5, unit: .amperes)
+/// let power: Power = voltage * current  // 500 W
+///
+/// // 力学: 仕事 = 力 × 距離 (W = F × d)
+/// let force = Force(10, unit: .newtons)
+/// let dist = Length(5, unit: .meters)
+/// let work: Energy = force * dist  // 50 J
+/// ```
+///
 /// ## 主要な型
 ///
 /// - ``Measurement``: 単位付き測定値のジェネリック型
@@ -76,10 +97,31 @@
 ///
 /// ## 次元別の型
 ///
+/// ### 力学・運動
 /// - ``Mass`` / ``MassUnit``: 質量
 /// - ``Length`` / ``LengthUnit``: 長さ
 /// - ``Duration`` / ``TimeUnit``: 時間
+/// - ``Speed`` / ``SpeedUnit``: 速度
+/// - ``Acceleration`` / ``AccelerationUnit``: 加速度
+/// - ``Force`` / ``ForceUnit``: 力
 /// - ``Energy`` / ``EnergyUnit``: エネルギー
+/// - ``Power`` / ``PowerUnit``: 仕事率
+/// - ``Pressure`` / ``PressureUnit``: 圧力
+///
+/// ### 電気
+/// - ``Current`` / ``CurrentUnit``: 電流
+/// - ``Voltage`` / ``VoltageUnit``: 電圧
+/// - ``Resistance`` / ``ResistanceUnit``: 電気抵抗
+/// - ``Charge`` / ``ChargeUnit``: 電荷
+/// - ``Frequency`` / ``FrequencyUnit``: 周波数
+///
+/// ### 幾何・その他
+/// - ``Area`` / ``AreaUnit``: 面積
+/// - ``Volume`` / ``VolumeUnit``: 体積
+/// - ``Angle`` / ``AngleUnit``: 角度
+/// - ``AngularSpeed`` / ``AngularSpeedUnit``: 角速度
+/// - ``Temperature``: 温度（オフセット変換付き専用型）
+/// - ``TemperatureDelta``: 温度差
 
 // Re-export all public types
 // (Swift automatically exports all public declarations from source files)
