@@ -2,7 +2,7 @@ import Foundation
 
 /// 力の単位
 ///
-/// 力は SI 導出単位で、ニュートン (N) が基本単位です。
+/// 力は SI 導出単位で、ニュートン (N) が基本単位。
 /// 1 N = 1 kg⋅m⋅s⁻² （1 kg の質量を 1 m/s² で加速させる力）
 ///
 /// ## 変換関係
@@ -110,7 +110,7 @@ extension ForceUnit: CustomStringConvertible {
 /// 力
 ///
 /// `Measurement<ForceUnit>` の型エイリアス。
-/// 力を型安全に表現します。
+/// 力を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

@@ -3,7 +3,7 @@ import Foundation
 /// 単位の基底プロトコル
 ///
 /// すべての単位型（`MetricUnit`, `EnergyUnit` など）が準拠するプロトコル。
-/// `Measurement` 型のジェネリックパラメータとして使用されます。
+/// `Measurement` 型のジェネリックパラメータとして使用する。
 ///
 /// ## 必須プロパティ
 /// - `coefficientToBase`: 基準単位への変換係数

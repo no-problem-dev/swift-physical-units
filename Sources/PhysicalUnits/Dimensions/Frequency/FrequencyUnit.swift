@@ -3,7 +3,7 @@ import Foundation
 /// 周波数の単位
 ///
 /// `MetricUnit<Hertz>` の型エイリアス。
-/// 接頭辞を変えることで、ヘルツ、キロヘルツ、メガヘルツなどを表現できます。
+/// 接頭辞を変えることで、ヘルツ、キロヘルツ、メガヘルツなどを表現できる。
 public typealias FrequencyUnit = MetricUnit<Hertz>
 
 // MARK: - Convenience Static Properties
@@ -51,7 +51,7 @@ extension FrequencyUnit {
 /// 周波数
 ///
 /// `Measurement<FrequencyUnit>` の型エイリアス。
-/// 周波数を型安全に表現します。
+/// 周波数を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

@@ -2,7 +2,7 @@ import Foundation
 
 /// 仕事率・電力の単位
 ///
-/// 仕事率は SI 導出単位で、ワット (W) が基本単位です。
+/// 仕事率は SI 導出単位で、ワット (W) が基本単位。
 /// 1 W = 1 J/s = 1 kg⋅m²⋅s⁻³
 ///
 /// ## 変換関係
@@ -106,7 +106,7 @@ extension PowerUnit: CustomStringConvertible {
 /// 仕事率・電力
 ///
 /// `Measurement<PowerUnit>` の型エイリアス。
-/// 仕事率・電力を型安全に表現します。
+/// 仕事率・電力を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

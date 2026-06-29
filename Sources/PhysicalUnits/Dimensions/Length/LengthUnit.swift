@@ -3,7 +3,7 @@ import Foundation
 /// 長さの単位
 ///
 /// `MetricUnit<Meter>` の型エイリアス。
-/// 接頭辞を変えることで、メートル、センチメートル、キロメートルなどを表現できます。
+/// 接頭辞を変えることで、メートル、センチメートル、キロメートルなどを表現できる。
 public typealias LengthUnit = MetricUnit<Meter>
 
 // MARK: - Convenience Static Properties
@@ -57,7 +57,7 @@ extension LengthUnit {
 /// 長さ
 ///
 /// `Measurement<LengthUnit>` の型エイリアス。
-/// 長さを型安全に表現します。
+/// 長さを型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift
@@ -114,7 +114,7 @@ extension Length {
 extension Length {
     /// 適切な単位で自動フォーマット
     ///
-    /// 値の大きさに応じて適切な単位を選択します。
+    /// 値の大きさに応じて適切な単位を自動選択。
     public var formatted: String {
         let m = meters
         if abs(m) >= 1000 {

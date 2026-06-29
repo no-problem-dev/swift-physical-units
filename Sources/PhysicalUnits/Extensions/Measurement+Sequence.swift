@@ -5,7 +5,7 @@ import Foundation
 extension Sequence {
     /// Measurement の合計を計算
     ///
-    /// `AdditiveArithmetic` に準拠しているため、`reduce` で簡単に合計できます。
+    /// `AdditiveArithmetic` に準拠しているため、`reduce` で簡単に合計できる。
     ///
     /// ## 使用例
     /// ```swift
@@ -23,7 +23,7 @@ extension Sequence {
 extension Collection {
     /// Measurement の平均を計算
     ///
-    /// 空のコレクションの場合は `nil` を返します。
+    /// 空のコレクションの場合は `nil` を返す。
     ///
     /// ## 使用例
     /// ```swift
@@ -61,14 +61,14 @@ extension Collection {
 extension Measurement where UnitType: Unit {
     /// 整数リテラルから基準単位で初期化
     ///
-    /// 値は基準単位（`MassUnit` なら gram、`LengthUnit` なら meter）として解釈されます。
-    /// 明示的な単位指定（`Mass(70, unit: .kilograms)` など）を推奨します。
+    /// 値は基準単位（`MassUnit` なら gram、`LengthUnit` なら meter）として解釈される。
+    /// 明示的な単位指定（`Mass(70, unit: .kilograms)` など）を推奨する。
     ///
     /// ## 設計上の制限
-    /// `ExpressibleByIntegerLiteral` 準拠は `MassUnit` と `LengthUnit` のみに限定しています。
+    /// `ExpressibleByIntegerLiteral` 準拠は `MassUnit` と `LengthUnit` のみに限定している。
     /// 理由: Swift のプロトコル準拠は型単位（`Measurement<UnitType>` ごと）に必要であり、
-    /// 全次元に追加するとリテラル `0` の型推論があいまいになります。
-    /// 必要な次元は都度 `Measurement<SomeUnit>(baseValue: Double(n))` で初期化してください。
+    /// 全次元に追加するとリテラル `0` の型推論があいまいになる。
+    /// 必要な次元は都度 `Measurement<SomeUnit>(baseValue: Double(n))` で初期化する。
     @inlinable
     public init(integerLiteral value: Int) where UnitType == MassUnit {
         self.init(baseValue: Double(value))

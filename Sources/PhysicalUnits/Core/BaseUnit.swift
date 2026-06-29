@@ -2,8 +2,8 @@ import Foundation
 
 /// 基本単位プロトコル
 ///
-/// SI 基本単位や派生単位の「基本形」を表します。
-/// `MetricUnit<Base>` と組み合わせることで、接頭辞付きの単位を生成できます。
+/// SI 基本単位や派生単位の「基本形」を表す。
+/// `MetricUnit<Base>` と組み合わせることで、接頭辞付きの単位を生成できる。
 ///
 /// ## 概念
 /// - `Gram`: 質量の基本単位
@@ -11,7 +11,7 @@ import Foundation
 /// - `Second`: 時間の基本単位
 ///
 /// これらに `MetricPrefix` を組み合わせることで、
-/// キログラム (kilo + gram)、センチメートル (centi + meter) などを表現します。
+/// キログラム (kilo + gram)、センチメートル (centi + meter) などを表現する。
 ///
 /// ## 実装例
 /// ```swift
@@ -29,6 +29,6 @@ public protocol BaseUnit: Sendable, Hashable {
     /// デフォルトイニシャライザ
     ///
     /// `BaseUnit` は phantom type として使用されるため、
-    /// インスタンス化は必須ではありませんが、型の一貫性のために必要です。
+    /// インスタンス化は必須ではないが、型の一貫性のために必要。
     init()
 }

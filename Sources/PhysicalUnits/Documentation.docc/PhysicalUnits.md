@@ -4,9 +4,9 @@
 
 ## Overview
 
-PhysicalUnits は、物理量（質量・長さ・時間・エネルギーなど）を型安全に表現し、単位変換を正確に行うフレームワークです。
+PhysicalUnits は、物理量（質量・長さ・時間・エネルギーなど）を型安全に表現し、単位変換を正確に行うフレームワーク。
 
-異なる次元の値（例: `Mass` と `Length`）を誤って加算しようとするとコンパイルエラーになるため、実行時エラーを型レベルで排除できます。
+異なる次元の値（例: `Mass` と `Length`）を誤って加算しようとするとコンパイルエラーになるため、実行時エラーを型レベルで排除できる。
 
 ```swift
 import PhysicalUnits
@@ -31,7 +31,7 @@ let p: Power    = v * i          // 500 W (P = V × I)
 
 ## Topics
 
-### Essentials
+### 基本
 
 - <doc:GettingStarted>
 

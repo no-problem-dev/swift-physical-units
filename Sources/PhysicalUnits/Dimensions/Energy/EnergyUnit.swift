@@ -3,14 +3,14 @@ import Foundation
 /// エネルギーの単位
 ///
 /// SI 単位（ジュール）と非 SI 単位（カロリー）を統合した単位型。
-/// ジュールを基準単位として、すべてのエネルギー単位を表現します。
+/// ジュールを基準単位として、すべてのエネルギー単位を表現する。
 ///
 /// ## 設計思想
 /// - **ジュール (J)**: SI 派生単位。1 J = 1 kg⋅m²/s²
 /// - **カロリー (cal)**: 歴史的単位。1 cal = 4.184 J（熱力学カロリー）
 ///
 /// フィットネスや栄養学ではカロリー（特にキロカロリー）が広く使われるため、
-/// 両方の単位系を統合しています。
+/// 両方の単位系を統合している。
 ///
 /// ## 使用例
 /// ```swift
@@ -35,7 +35,7 @@ public enum EnergyUnit: Unit, Codable, Sendable, Hashable {
     /// 1 カロリー = 4.184 ジュール（熱力学カロリー）
     ///
     /// 注: 国際カロリー（4.1868 J）や 15℃カロリー（4.1855 J）など
-    /// 複数の定義が存在しますが、最も一般的な熱力学カロリーを採用。
+    /// 複数の定義が存在するが、最も一般的な熱力学カロリーを採用。
     public static let joulesPerCalorie: Double = 4.184
 
     // MARK: - Unit Protocol
@@ -128,7 +128,7 @@ extension EnergyUnit: CustomStringConvertible {
 /// エネルギー
 ///
 /// `Measurement<EnergyUnit>` の型エイリアス。
-/// エネルギーを型安全に表現します。
+/// エネルギーを型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift
@@ -185,7 +185,7 @@ extension Energy {
 extension Energy {
     /// 適切な単位で自動フォーマット（カロリー系）
     ///
-    /// 栄養学・フィットネス向けにカロリー系で表示します。
+    /// 栄養学・フィットネス向けにカロリー系で表示する。
     public var formattedCalories: String {
         let kcal = kilocalories
         if abs(kcal) >= 1000 {
@@ -199,7 +199,7 @@ extension Energy {
 
     /// 適切な単位で自動フォーマット（ジュール系）
     ///
-    /// 物理学・工学向けにジュール系で表示します。
+    /// 物理学・工学向けにジュール系で表示する。
     public var formattedJoules: String {
         let j = joules
         if abs(j) >= 1_000_000 {

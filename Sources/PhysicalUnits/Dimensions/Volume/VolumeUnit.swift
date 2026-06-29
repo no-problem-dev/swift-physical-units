@@ -3,7 +3,7 @@ import Foundation
 /// 体積の単位
 ///
 /// `MetricUnit<Liter>` の型エイリアス。
-/// 接頭辞を変えることで、リットル、ミリリットル、キロリットルなどを表現できます。
+/// 接頭辞を変えることで、リットル、ミリリットル、キロリットルなどを表現できる。
 public typealias VolumeUnit = MetricUnit<Liter>
 
 // MARK: - Convenience Static Properties
@@ -51,7 +51,7 @@ extension VolumeUnit {
 /// 体積
 ///
 /// `Measurement<VolumeUnit>` の型エイリアス。
-/// 体積を型安全に表現します。
+/// 体積を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

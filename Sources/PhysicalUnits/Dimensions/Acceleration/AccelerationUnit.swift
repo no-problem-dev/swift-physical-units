@@ -2,7 +2,7 @@ import Foundation
 
 /// 加速度の単位
 ///
-/// 加速度は SI 導出単位で、メートル毎秒毎秒 (m/s²) が基本単位です。
+/// 加速度は SI 導出単位で、メートル毎秒毎秒 (m/s²) が基本単位。
 /// a = Δv / Δt （速度の時間変化率）
 ///
 /// ## 変換関係
@@ -85,7 +85,7 @@ extension AccelerationUnit: CustomStringConvertible {
 /// 加速度
 ///
 /// `Measurement<AccelerationUnit>` の型エイリアス。
-/// 加速度を型安全に表現します。
+/// 加速度を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

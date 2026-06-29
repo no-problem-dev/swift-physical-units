@@ -2,7 +2,7 @@ import Foundation
 
 /// 角速度の単位
 ///
-/// 角速度は角度の時間変化率で、ラジアン毎秒 (rad/s) が基本単位です。
+/// 角速度は角度の時間変化率で、ラジアン毎秒 (rad/s) が基本単位。
 /// ω = θ / t = 2πf
 ///
 /// ## 変換関係
@@ -86,7 +86,7 @@ extension AngularSpeedUnit: CustomStringConvertible {
 /// 角速度
 ///
 /// `Measurement<AngularSpeedUnit>` の型エイリアス。
-/// 角速度を型安全に表現します。
+/// 角速度を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

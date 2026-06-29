@@ -3,7 +3,7 @@ import Foundation
 /// 電圧（電位差）の単位
 ///
 /// `MetricUnit<Volt>` の型エイリアス。
-/// 接頭辞を変えることで、ボルト、ミリボルト、キロボルトなどを表現できます。
+/// 接頭辞を変えることで、ボルト、ミリボルト、キロボルトなどを表現できる。
 public typealias VoltageUnit = MetricUnit<Volt>
 
 // MARK: - Convenience Static Properties
@@ -45,7 +45,7 @@ extension VoltageUnit {
 /// 電圧（電位差）
 ///
 /// `Measurement<VoltageUnit>` の型エイリアス。
-/// 電圧を型安全に表現します。
+/// 電圧を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

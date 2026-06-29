@@ -3,7 +3,7 @@ import Foundation
 /// 温度の単位
 ///
 /// 温度は他の物理量と異なり、単純な倍率変換ではなく
-/// オフセット変換が必要です（摂氏・華氏）。
+/// オフセット変換が必要（摂氏・華氏）。
 ///
 /// ## 変換式
 /// - Kelvin → Celsius: °C = K - 273.15
@@ -43,8 +43,8 @@ public enum TemperatureUnit: Unit, Codable, Sendable, Hashable {
 
     /// 基準単位（ケルビン）への変換係数
     ///
-    /// 温度は線形変換ではないため、この値は相対的な温度差の変換にのみ使用します。
-    /// 絶対温度の変換には `Temperature` 型の専用メソッドを使用してください。
+    /// 温度は線形変換ではないため、この値は相対的な温度差の変換にのみ使用する。
+    /// 絶対温度の変換には `Temperature` 型の専用メソッドを使用する。
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -82,8 +82,8 @@ extension TemperatureUnit: CustomStringConvertible {
 
 /// 温度
 ///
-/// 絶対温度を表現する型。内部ではケルビン (K) で値を保持します。
-/// 温度は他の物理量と異なり、オフセット変換が必要なため専用の型として実装しています。
+/// 絶対温度を表現する型。内部ではケルビン (K) で値を保持する。
+/// 温度は他の物理量と異なり、オフセット変換が必要なため専用の型として実装している。
 ///
 /// ## 使用例
 /// ```swift
@@ -229,7 +229,7 @@ extension Temperature {
 
 /// 温度差
 ///
-/// 2つの温度間の差を表す型。温度差は線形的に扱えます。
+/// 2つの温度間の差を表す型。温度差は線形的に扱える。
 @frozen
 public struct TemperatureDelta: Sendable, Hashable, Comparable, Codable, AdditiveArithmetic {
     /// ケルビンでの温度差

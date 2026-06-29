@@ -3,7 +3,7 @@ import Foundation
 /// 質量の単位
 ///
 /// `MetricUnit<Gram>` の型エイリアス。
-/// 接頭辞を変えることで、グラム、キログラム、ミリグラムなどを表現できます。
+/// 接頭辞を変えることで、グラム、キログラム、ミリグラムなどを表現できる。
 public typealias MassUnit = MetricUnit<Gram>
 
 // MARK: - Convenience Static Properties
@@ -47,7 +47,7 @@ extension MassUnit {
 
     /// トン (t) = メガグラム
     ///
-    /// SI では「トン」は「メガグラム」と同義です。
+    /// SI では「トン」は「メガグラム」と同義。
     @inlinable
     public static var tonnes: MassUnit {
         MassUnit(.mega)
@@ -59,7 +59,7 @@ extension MassUnit {
 /// 質量
 ///
 /// `Measurement<MassUnit>` の型エイリアス。
-/// 質量を型安全に表現します。
+/// 質量を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift
@@ -110,7 +110,7 @@ extension Mass {
 extension Mass {
     /// 適切な単位で自動フォーマット
     ///
-    /// 値の大きさに応じて適切な単位を選択します。
+    /// 値の大きさに応じて適切な単位を自動選択。
     public var formatted: String {
         let kg = kilograms
         if abs(kg) >= 1000 {

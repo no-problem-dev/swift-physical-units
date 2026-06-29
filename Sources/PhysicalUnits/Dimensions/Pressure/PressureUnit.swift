@@ -2,7 +2,7 @@ import Foundation
 
 /// 圧力の単位
 ///
-/// 圧力は SI 導出単位で、パスカル (Pa) が基本単位です。
+/// 圧力は SI 導出単位で、パスカル (Pa) が基本単位。
 /// 1 Pa = 1 N/m² = 1 kg⋅m⁻¹⋅s⁻²
 ///
 /// ## 変換関係
@@ -128,7 +128,7 @@ extension PressureUnit: CustomStringConvertible {
 /// 圧力
 ///
 /// `Measurement<PressureUnit>` の型エイリアス。
-/// 圧力を型安全に表現します。
+/// 圧力を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

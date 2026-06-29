@@ -3,7 +3,7 @@ import Foundation
 /// 電流の単位
 ///
 /// `MetricUnit<Ampere>` の型エイリアス。
-/// 接頭辞を変えることで、アンペア、ミリアンペア、マイクロアンペアなどを表現できます。
+/// 接頭辞を変えることで、アンペア、ミリアンペア、マイクロアンペアなどを表現できる。
 public typealias CurrentUnit = MetricUnit<Ampere>
 
 // MARK: - Convenience Static Properties
@@ -45,7 +45,7 @@ extension CurrentUnit {
 /// 電流
 ///
 /// `Measurement<CurrentUnit>` の型エイリアス。
-/// 電流を型安全に表現します。
+/// 電流を型安全に表現する。
 ///
 /// ## 使用例
 /// ```swift

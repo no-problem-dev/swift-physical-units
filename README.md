@@ -1,20 +1,22 @@
+English | [日本語](./README.ja.md)
+
 # PhysicalUnits
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20watchOS%20|%20tvOS%20|%20visionOS-blue.svg)](https://developer.apple.com/swift/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Swift で物理単位を型安全に扱うためのライブラリです。コンパイル時に単位の整合性を検証し、実行時のオーバーヘッドを最小限に抑えます。
+A Swift library for type-safe physical units. Unit consistency is verified at compile time with minimal runtime overhead.
 
-## 特徴
+## Features
 
-- **型安全な単位変換**: 異なる単位間の変換をコンパイル時に検証
-- **物理公式の演算子**: `F = m * a`、`E = F * d`、`P = V * I` などの物理公式を自然な構文で記述
-- **SI プレフィックス対応**: `MetricUnit<BaseUnit>` パターンにより nano から tera まで自動対応
-- **高パフォーマンス**: `@frozen`、`@inlinable` を活用した最適化
-- **マルチプラットフォーム**: iOS、macOS、watchOS、tvOS、visionOS 対応
+- **Type-safe unit conversion**: Compile-time validation of conversions between different units
+- **Physics formula operators**: Natural syntax for formulas like `F = m * a`, `E = F * d`, `P = V * I`
+- **SI prefix support**: Automatic nano-to-tera coverage via the `MetricUnit<BaseUnit>` pattern
+- **High performance**: Optimized with `@frozen` and `@inlinable`
+- **Multi-platform**: iOS, macOS, watchOS, tvOS, visionOS
 
-## インストール
+## Installation
 
 ### Swift Package Manager
 
@@ -24,49 +26,49 @@ dependencies: [
 ]
 ```
 
-## 使い方
+## Usage
 
-### 基本的な単位変換
+### Basic Unit Conversion
 
 ```swift
 import PhysicalUnits
 
-// 長さ
+// Length
 let distance = Length(100, unit: .meters)
 print(distance.kilometers)  // 0.1
 
-// 質量
+// Mass
 let mass = Mass(1, unit: .kilograms)
 print(mass.grams)  // 1000.0
 
-// 時間
+// Time
 let time = Duration(1, unit: .hours)
 print(time.seconds)  // 3600.0
 ```
 
-### 物理公式の計算
+### Physics Formula Calculations
 
 ```swift
-// 速度 = 距離 / 時間
+// Speed = Distance / Time
 let distance = Length(100, unit: .kilometers)
 let time = Duration(2, unit: .hours)
 let speed: Speed = distance / time
 print(speed.kilometersPerHour)  // 50.0
 
-// 力 = 質量 × 加速度
+// Force = Mass × Acceleration
 let mass = Mass(10, unit: .kilograms)
 let acceleration = Acceleration(9.8, unit: .metersPerSecondSquared)
 let force: Force = mass * acceleration
 print(force.newtons)  // 98.0
 
-// 電力 = 電圧 × 電流
+// Power = Voltage × Current
 let voltage = Voltage(100, unit: .volts)
 let current = Current(5, unit: .amperes)
 let power: Power = voltage * current
 print(power.watts)  // 500.0
 ```
 
-### オームの法則
+### Ohm's Law
 
 ```swift
 // V = IR
@@ -80,96 +82,96 @@ let current2: Current = voltage / resistance
 print(current2.amperes)  // 2.0
 ```
 
-### 回転運動
+### Rotational Motion
 
 ```swift
-// 角速度
+// Angular speed
 let angle = Angle(360, unit: .degrees)
 let time = Duration(1, unit: .seconds)
 let angularSpeed: AngularSpeed = angle / time
 print(angularSpeed.rpm)  // 60.0
 
-// 線速度 = 角速度 × 半径
+// Linear speed = angular speed × radius
 let radius = Length(0.5, unit: .meters)
 let linearSpeed: Speed = angularSpeed * radius
 print(linearSpeed.metersPerSecond)  // 3.14...
 ```
 
-### バッテリー容量
+### Battery Capacity
 
 ```swift
-// 電荷量
+// Charge
 let battery = Charge(milliampereHours: 5000)
 print(battery.ampereHours)  // 5.0
 print(battery.coulombs)  // 18000.0
 
-// 放電時間の計算
+// Discharge time
 let current = Current(500, unit: .milliamperes)
 let dischargeTime: Duration = battery / current
 print(dischargeTime.hours)  // 10.0
 ```
 
-## 対応する次元
+## Supported Dimensions
 
-### 基本次元
-| 次元 | 型 | 基準単位 |
-|------|-----|---------|
-| 長さ | `Length` | メートル (m) |
-| 質量 | `Mass` | グラム (g) |
-| 時間 | `Duration` | 秒 (s) |
-| 温度 | `Temperature` | ケルビン (K) |
-| 電流 | `Current` | アンペア (A) |
-| 角度 | `Angle` | ラジアン (rad) |
+### Base Dimensions
+| Dimension | Type | Base Unit |
+|-----------|------|-----------|
+| Length | `Length` | Meter (m) |
+| Mass | `Mass` | Gram (g) |
+| Time | `Duration` | Second (s) |
+| Temperature | `Temperature` | Kelvin (K) |
+| Electric current | `Current` | Ampere (A) |
+| Angle | `Angle` | Radian (rad) |
 
-### 派生次元
-| 次元 | 型 | 基準単位 | 公式 |
-|------|-----|---------|-----|
-| 速度 | `Speed` | m/s | v = d/t |
-| 加速度 | `Acceleration` | m/s² | a = v/t |
-| 力 | `Force` | N (kg·m/s²) | F = ma |
-| エネルギー | `Energy` | J (N·m) | E = Fd |
-| 電力 | `Power` | W (J/s) | P = E/t |
-| 電圧 | `Voltage` | V | V = IR |
-| 抵抗 | `Resistance` | Ω | R = V/I |
-| 電荷 | `Charge` | C (A·s) | Q = It |
-| 角速度 | `AngularSpeed` | rad/s | ω = θ/t |
-| 周波数 | `Frequency` | Hz | f = 1/T |
-| 面積 | `Area` | m² | A = l × w |
-| 体積 | `Volume` | m³ | V = l × w × h |
-| 圧力 | `Pressure` | Pa | P = F/A |
+### Derived Dimensions
+| Dimension | Type | Base Unit | Formula |
+|-----------|------|-----------|---------|
+| Speed | `Speed` | m/s | v = d/t |
+| Acceleration | `Acceleration` | m/s² | a = v/t |
+| Force | `Force` | N (kg·m/s²) | F = ma |
+| Energy | `Energy` | J (N·m) | E = Fd |
+| Power | `Power` | W (J/s) | P = E/t |
+| Voltage | `Voltage` | V | V = IR |
+| Resistance | `Resistance` | Ω | R = V/I |
+| Charge | `Charge` | C (A·s) | Q = It |
+| Angular speed | `AngularSpeed` | rad/s | ω = θ/t |
+| Frequency | `Frequency` | Hz | f = 1/T |
+| Area | `Area` | m² | A = l × w |
+| Volume | `Volume` | m³ | V = l × w × h |
+| Pressure | `Pressure` | Pa | P = F/A |
 
-## アーキテクチャ
+## Architecture
 
 ```
 PhysicalUnits/
 ├── Core/
-│   ├── Measurement.swift      # ジェネリックな測定値型
-│   ├── Unit.swift             # Unit プロトコル
-│   └── MetricUnit.swift       # SI プレフィックス対応
+│   ├── Measurement.swift      # Generic measurement type
+│   ├── Unit.swift             # Unit protocol
+│   └── MetricUnit.swift       # SI prefix support
 ├── Dimensions/
-│   ├── Length/                # 長さ
-│   ├── Mass/                  # 質量
-│   ├── Duration/              # 時間
-│   ├── Speed/                 # 速度
-│   ├── Acceleration/          # 加速度
-│   ├── Force/                 # 力
-│   ├── Energy/                # エネルギー
-│   ├── Power/                 # 電力
-│   ├── Voltage/               # 電圧
-│   ├── Current/               # 電流
-│   ├── Resistance/            # 抵抗
-│   ├── Charge/                # 電荷
-│   ├── Angle/                 # 角度
-│   ├── AngularSpeed/          # 角速度
-│   ├── Frequency/             # 周波数
+│   ├── Length/                # Length
+│   ├── Mass/                  # Mass
+│   ├── Time/                  # Time
+│   ├── Speed/                 # Speed
+│   ├── Acceleration/          # Acceleration
+│   ├── Force/                 # Force
+│   ├── Energy/                # Energy
+│   ├── Power/                 # Power
+│   ├── Voltage/               # Voltage
+│   ├── Current/               # Current
+│   ├── Resistance/            # Resistance
+│   ├── Charge/                # Charge
+│   ├── Angle/                 # Angle
+│   ├── AngularSpeed/          # Angular speed
+│   ├── Frequency/             # Frequency
 │   └── ...
 └── Formulas/
-    ├── KinematicsOperators.swift   # 運動学
-    ├── MechanicsOperators.swift    # 力学
-    ├── ElectricityOperators.swift  # 電気
-    └── FrequencyOperators.swift    # 周波数・角速度
+    ├── KinematicsOperators.swift   # Kinematics
+    ├── MechanicsOperators.swift    # Mechanics
+    ├── ElectricityOperators.swift  # Electricity
+    └── FrequencyOperators.swift    # Frequency & angular speed
 ```
 
-## ライセンス
+## License
 
-MIT License - 詳細は [LICENSE](LICENSE) を参照してください。
+MIT License — see [LICENSE](LICENSE) for details.

@@ -4,7 +4,7 @@
 
 ## Installation
 
-Package.swift に依存を追加します。
+Package.swift に依存を追加する。
 
 ```swift
 dependencies: [
@@ -40,7 +40,7 @@ let height = Length(175, unit: .centimeters)
 print(height.meters)    // 1.75
 print(height.kilometers)// 0.00175
 
-// 時間: 分で作成し、秒で取得
+// 時間: 秒で作成し、分やミリ秒で取得
 let lap = Duration(90, unit: .seconds)
 print(lap.minutes)      // 1.5
 print(lap.milliseconds) // 90000.0
@@ -52,7 +52,7 @@ print(meal.kilojoules)  // 2092.0
 
 ### 型安全な演算
 
-同じ次元の値同士で加減算・スカラー倍が使えます。
+同じ次元の値同士で加減算・スカラー倍が使える。
 
 ```swift
 let a = Mass(1, unit: .kilograms)
@@ -92,7 +92,7 @@ print(v3.volts)              // 100.0
 
 ### 温度（オフセット変換）
 
-温度は加算ではなくオフセット型 `TemperatureDelta` を使います。
+温度は加算ではなくオフセット型 `TemperatureDelta` を使う。
 
 ```swift
 let body = Temperature(37, unit: .celsius)
