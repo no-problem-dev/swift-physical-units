@@ -21,7 +21,7 @@ import Foundation
 /// print(wind.kilometersPerHour)   // 37.04
 /// ```
 @frozen
-public enum SpeedUnit: Unit, Codable, Sendable, Hashable {
+public enum SpeedUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Metre per second (m/s), the base unit every other case converts against.
     case metersPerSecond
 

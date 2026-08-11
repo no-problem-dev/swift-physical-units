@@ -52,6 +52,18 @@ extension MetricUnit: CustomStringConvertible {
     }
 }
 
+// MARK: - CaseIterable
+
+extension MetricUnit: CaseIterable {
+    /// One unit per ``MetricPrefix``, in the order the prefixes are declared: `Pg`, `Tg`, …, `fg`.
+    ///
+    /// The prefix is the only thing a `MetricUnit` stores, so these fifteen are every value the
+    /// type can hold — which is what lets a test assert over the whole of it.
+    public static var allCases: [MetricUnit<Base>] {
+        MetricPrefix.allCases.map { MetricUnit($0) }
+    }
+}
+
 // MARK: - Convenience Factory Methods
 
 extension MetricUnit {

@@ -21,7 +21,7 @@ import Foundation
 /// print(bulb.kilowatts)    // 0.1
 /// ```
 @frozen
-public enum PowerUnit: Unit, Codable, Sendable, Hashable {
+public enum PowerUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Watt (W), the base unit every other case converts against.
     case watts
 

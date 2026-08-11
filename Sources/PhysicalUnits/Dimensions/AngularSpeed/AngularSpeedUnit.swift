@@ -26,7 +26,7 @@ import Foundation
 /// print(motor.radiansPerSecond)  // 314.159...
 /// ```
 @frozen
-public enum AngularSpeedUnit: Unit, Codable, Sendable, Hashable {
+public enum AngularSpeedUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Radians per second, the base of this type.
     case radiansPerSecond
 

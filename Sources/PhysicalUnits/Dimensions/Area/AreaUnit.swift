@@ -28,7 +28,7 @@ import Foundation
 /// print(lot.ares)            // 10.0
 /// ```
 @frozen
-public enum AreaUnit: Unit, Codable, Sendable, Hashable {
+public enum AreaUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// The square metre, the SI derived unit of area and the base of this type.
     case squareMeters
 

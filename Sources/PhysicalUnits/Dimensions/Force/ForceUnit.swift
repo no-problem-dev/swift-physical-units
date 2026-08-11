@@ -23,7 +23,7 @@ import Foundation
 /// print(thrust.newtons)  // 100000.0
 /// ```
 @frozen
-public enum ForceUnit: Unit, Codable, Sendable, Hashable {
+public enum ForceUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Newton (N), the base unit every other case converts against.
     case newtons
 

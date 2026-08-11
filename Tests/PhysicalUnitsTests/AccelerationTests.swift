@@ -122,4 +122,31 @@ struct AccelerationTests {
         let backToGal = Acceleration(inMGal, unit: .milligal)
         #expect(abs(original.gal - backToGal.gal) < 0.001)
     }
+
+    // MARK: - Formatting
+
+    @Test("Formatted picks each unit in the ladder, Gal included")
+    func formattedCoversEveryBand() {
+        #expect(Acceleration(2, unit: .standardGravity).formatted == "2.00 g")
+        #expect(Acceleration(3, unit: .metersPerSecondSquared).formatted == "3.000 m/s²")
+        #expect(Acceleration(50, unit: .gal).formatted == "50.00 Gal")
+        #expect(Acceleration(500, unit: .milligal).formatted == "500.0 mGal")
+    }
+
+    @Test("Formatted switches unit at one of each unit")
+    func formattedBoundaries() {
+        #expect(Acceleration(1, unit: .standardGravity).formatted == "1.00 g")
+        #expect(Acceleration(1, unit: .metersPerSecondSquared).formatted == "1.000 m/s²")
+        #expect(Acceleration(1, unit: .gal).formatted == "1.00 Gal")
+        #expect(Acceleration(1, unit: .milligal).formatted == "1.0 mGal")
+    }
+
+    @Test("Formatted picks the same unit for a value and its negation")
+    func formattedIsSignSymmetric() {
+        for gal in [1.0, 50.0, 0.5, 981.0, 1e4] {
+            let positive = Acceleration(gal, unit: .gal).formatted
+            let negative = Acceleration(-gal, unit: .gal).formatted
+            #expect(negative == "-" + positive)
+        }
+    }
 }

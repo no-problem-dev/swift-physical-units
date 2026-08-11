@@ -102,6 +102,18 @@ extension TimeUnit: CustomStringConvertible {
     }
 }
 
+// MARK: - CaseIterable
+
+extension TimeUnit: CaseIterable {
+    /// Every time unit: one prefixed second per ``MetricPrefix``, then minutes, hours, and days.
+    ///
+    /// ``seconds(_:)`` carries a prefix, so the compiler cannot synthesize this. The list is
+    /// written out instead, which is what lets a test assert over the whole type.
+    public static var allCases: [TimeUnit] {
+        MetricPrefix.allCases.map { TimeUnit.seconds($0) } + [.minutes, .hours, .days]
+    }
+}
+
 // MARK: - Duration Type Alias
 
 /// An elapsed span of time, stored in seconds.
@@ -187,23 +199,33 @@ extension Duration {
         }
     }
 
-    /// A string as h:mm:ss, dropping the hours field for durations under an hour.
+    /// A string as h:mm:ss, dropping the hours field for durations under an hour, or `nil` for
+    /// a duration that is not finite.
     ///
     /// "1:30:00" is an hour and a half; "1:05" is 65 seconds, not 65 minutes. Seconds are
-    /// truncated toward zero, so 89.9 s reads "1:29".
+    /// truncated toward zero, so 89.9 s reads "1:29" and -89.9 s reads "-1:29". A minus sign
+    /// is written once in front of the whole string, and only when the truncated value is
+    /// itself negative: -0.4 s reads "0:00", because the value it shows is zero.
     ///
-    /// - Warning: A negative duration comes out malformed, as "-1:-30"; format its `magnitude`
-    ///   and add the sign yourself. A duration too large to fit `Int` seconds traps.
-    public var formattedHMS: String {
-        let totalSeconds = Int(seconds)
-        let h = totalSeconds / 3600
-        let m = (totalSeconds % 3600) / 60
-        let s = totalSeconds % 60
+    /// Every finite duration formats, however large — the hours field grows rather than
+    /// overflowing. A NaN or an infinity has no h:mm:ss form at all, so this returns `nil`
+    /// rather than choosing one; `t / v` with a zero speed is the usual way to reach that.
+    public var formattedHMS: String? {
+        let total = seconds
+        guard total.isFinite else { return nil }
+
+        let whole = total.rounded(.towardZero)
+        let sign = whole < 0 ? "-" : ""
+        let magnitude = abs(whole)
+
+        let h = (magnitude / 3600).rounded(.towardZero)
+        let m = Int(magnitude.truncatingRemainder(dividingBy: 3600) / 60)
+        let s = Int(magnitude.truncatingRemainder(dividingBy: 60))
 
         if h > 0 {
-            return String(format: "%d:%02d:%02d", h, m, s)
+            return sign + String(format: "%.0f:%02d:%02d", h, m, s)
         } else {
-            return String(format: "%d:%02d", m, s)
+            return sign + String(format: "%d:%02d", m, s)
         }
     }
 }

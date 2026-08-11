@@ -21,7 +21,7 @@ import Foundation
 /// print(weather.atmospheres)  // 1.0
 /// ```
 @frozen
-public enum PressureUnit: Unit, Codable, Sendable, Hashable {
+public enum PressureUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Pascals (Pa), the SI derived unit and the base every value is stored in.
     case pascals
 

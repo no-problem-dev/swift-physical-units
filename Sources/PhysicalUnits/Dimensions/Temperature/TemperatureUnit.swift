@@ -23,7 +23,7 @@ import Foundation
 /// print(bodyTemp.kelvin)      // 310.15
 /// ```
 @frozen
-public enum TemperatureUnit: Unit, Codable, Sendable, Hashable {
+public enum TemperatureUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Kelvin, the SI base unit and the scale readings are stored in.
     case kelvin
 

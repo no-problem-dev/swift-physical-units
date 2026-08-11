@@ -29,7 +29,7 @@ import Foundation
 /// print(halfTurn.degrees)    // 180.0
 /// ```
 @frozen
-public enum AngleUnit: Unit, Codable, Sendable, Hashable {
+public enum AngleUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// The radian, the dimensionless SI unit of plane angle and the base of this type.
     case radians
 

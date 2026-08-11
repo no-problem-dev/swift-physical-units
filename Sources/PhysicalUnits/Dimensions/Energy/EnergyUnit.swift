@@ -118,6 +118,18 @@ extension EnergyUnit: CustomStringConvertible {
     }
 }
 
+// MARK: - CaseIterable
+
+extension EnergyUnit: CaseIterable {
+    /// Every energy unit: a prefixed joule and a prefixed calorie for each ``MetricPrefix``.
+    ///
+    /// Both cases carry a prefix, so the compiler cannot synthesize this. The list is written
+    /// out instead, which is what lets a test assert over the whole type.
+    public static var allCases: [EnergyUnit] {
+        MetricPrefix.allCases.flatMap { [EnergyUnit.joules($0), EnergyUnit.calories($0)] }
+    }
+}
+
 // MARK: - Energy Type Alias
 
 /// An energy value, stored in joules whichever unit it was written in.

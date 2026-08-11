@@ -20,7 +20,7 @@ import Foundation
 /// print(car.standardGravity)  // 0.306
 /// ```
 @frozen
-public enum AccelerationUnit: Unit, Codable, Sendable, Hashable {
+public enum AccelerationUnit: Unit, Codable, Sendable, Hashable, CaseIterable {
     /// Metre per second squared (m/s²), the base unit every other case converts against.
     case metersPerSecondSquared
 
@@ -124,18 +124,19 @@ extension Acceleration {
 // MARK: - Acceleration Formatting
 
 extension Acceleration {
-    /// The value as g from 1 g upward, as m/s² down to 0.01 m/s², and as mGal below that.
+    /// The value in the largest unit there is at least one of: g from 1 g, then m/s², Gal, and
+    /// mGal below 1 Gal.
     ///
-    /// The Gal branch below never runs: `abs(gal) >= 1` is the same condition as
-    /// `abs(metersPerSecondSquared) >= 0.01`, which the preceding branch has already taken.
-    /// This property therefore never prints `Gal`.
+    /// Each unit therefore owns a band of its own — g from 9.80665 m/s² up, m/s² from 1 m/s²,
+    /// Gal from 0.01 m/s², mGal below that. The sign does not affect the choice, so -50 Gal
+    /// reads "-50.00 Gal", and a NaN falls to the last branch and reads "nan mGal".
     public var formatted: String {
         let ms2 = metersPerSecondSquared
         if abs(ms2) >= AccelerationUnit.standardGravityValue {
             return String(format: "%.2f g", standardGravity)
-        } else if abs(ms2) >= 0.01 {
+        } else if abs(ms2) >= 1 {
             return String(format: "%.3f m/s²", ms2)
-        } else if abs(gal) >= 1 {
+        } else if abs(ms2) >= AccelerationUnit.galToMsSquared {
             return String(format: "%.2f Gal", gal)
         } else {
             return String(format: "%.1f mGal", milligal)

@@ -144,6 +144,59 @@ struct DurationTests {
         #expect(duration3.formattedHMS == "1:01:01")
     }
 
+    @Test("HMS formatting signs the whole string, not each component")
+    func hmsFormattingIsSignedOnce() {
+        #expect(Duration(-90, unit: .seconds).formattedHMS == "-1:30")
+        #expect(Duration(-59, unit: .seconds).formattedHMS == "-0:59")
+        #expect(Duration(-3600, unit: .seconds).formattedHMS == "-1:00:00")
+        #expect(Duration(-3661, unit: .seconds).formattedHMS == "-1:01:01")
+    }
+
+    @Test("HMS formatting at zero and at exactly one hour")
+    func hmsFormattingBoundaries() {
+        #expect(Duration(0, unit: .seconds).formattedHMS == "0:00")
+        #expect(Duration(3599, unit: .seconds).formattedHMS == "59:59")
+        #expect(Duration(3600, unit: .seconds).formattedHMS == "1:00:00")
+        #expect(Duration(-0.4, unit: .seconds).formattedHMS == "0:00")
+
+        // The hours field grows rather than wrapping into days, and rather than overflowing.
+        #expect(Duration(1, unit: .days).formattedHMS == "24:00:00")
+        #expect(Duration(359_999, unit: .seconds).formattedHMS == "99:59:59")
+        #expect(Duration(1e18, unit: .seconds).formattedHMS == "277777777777777:46:40")
+    }
+
+    @Test("HMS formatting truncates toward zero in both directions")
+    func hmsFormattingTruncatesTowardZero() {
+        #expect(Duration(89.9, unit: .seconds).formattedHMS == "1:29")
+        #expect(Duration(-89.9, unit: .seconds).formattedHMS == "-1:29")
+    }
+
+    @Test("HMS formatting has no answer for a non-finite duration")
+    func hmsFormattingNonFinite() {
+        // t = d / v with both at zero is the ordinary way a caller reaches a NaN duration.
+        let stalled: Duration = Length(0, unit: .meters) / Speed(0, unit: .metersPerSecond)
+        #expect(stalled.seconds.isNaN)
+        #expect(stalled.formattedHMS == nil)
+
+        let never: Duration = Length(100, unit: .meters) / Speed(0, unit: .metersPerSecond)
+        #expect(never.seconds.isInfinite)
+        #expect(never.formattedHMS == nil)
+        #expect(Duration(-.infinity, unit: .seconds).formattedHMS == nil)
+    }
+
+    @Test("HMS formatting is total over every finite duration")
+    func hmsFormattingIsTotal() {
+        let probes: [Double] = [
+            0, -0.0, 1, -1, 59.999, -59.999, 3600, -3600, 86_399, 86_400,
+            1e9, -1e9, 1e18, -1e18, .greatestFiniteMagnitude, -.greatestFiniteMagnitude,
+            .leastNormalMagnitude, -.leastNormalMagnitude, .leastNonzeroMagnitude
+        ]
+        for probe in probes {
+            let rendered = Duration(probe, unit: .seconds).formattedHMS
+            #expect(rendered?.isEmpty == false)
+        }
+    }
+
     @Test("Formatted output")
     func formattedOutput() {
         let duration = Duration(45, unit: .minutes)
