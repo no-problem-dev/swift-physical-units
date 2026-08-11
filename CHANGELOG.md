@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-08-11
+
 `Duration.formattedHMS` now returns `String?`. It returned a malformed string for a
 negative duration — -90 s came out as "-1:-30", and -3600 s lost its hour entirely and
 read "0:00" — because the sign was applied to each field instead of once to the whole.

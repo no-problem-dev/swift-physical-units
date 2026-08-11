@@ -51,7 +51,7 @@ API リファレンスとガイドは DocC カタログから公開している�
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/no-problem-dev/swift-physical-units.git", from: "1.0.0")
+    .package(url: "https://github.com/no-problem-dev/swift-physical-units.git", from: "2.0.0")
 ]
 
 .target(
