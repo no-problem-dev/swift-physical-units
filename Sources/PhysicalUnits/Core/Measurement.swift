@@ -1,52 +1,70 @@
 import Foundation
 
-/// 単位付き測定値
+/// A quantity stored in its dimension's base unit and tagged with that dimension at compile time.
 ///
-/// 内部では基準単位で値を保持し、必要に応じて他の単位に変換可能。
-/// ジェネリックパラメータ `UnitType` により、異なる次元の値の混同を型レベルで防止する。
+/// The value is converted into the base unit when it is created and back out again when it
+/// is read, so the only storage is one `Double` — the unit itself is not kept. `UnitType`
+/// makes two dimensions two unrelated types, so a mass and a length cannot be added,
+/// compared, or assigned to each other.
 ///
-/// ## 使用例
 /// ```swift
 /// let mass1 = Measurement<MassUnit>(70, unit: .kilograms)
 /// let mass2 = Measurement<MassUnit>(5000, unit: .grams)
 ///
-/// // 型エイリアスを使用（推奨）
+/// // Through a dimension's type alias (preferred)
 /// let mass = Mass(70, unit: .kilograms)
 /// print(mass.value(in: .grams))  // 70000.0
 /// ```
 ///
-/// ## メモリ効率
-/// - `baseValue` のみ保持 → 8 バイト
-/// - `UnitType` はインスタンスを持たない
+/// ## Where the compile-time checking stops
+///
+/// Within one dimension the typed operators cover addition, subtraction, and comparison.
+/// Everything below leaves that guarantee, and each is a way to get a wrong answer that
+/// still compiles:
+///
+/// - Scalar `*` and `/` with a `Double`, and the `Measurement / Measurement` ratio, move
+///   values in and out as plain numbers, and nothing checks what those numbers meant.
+/// - Two different dimensions combine only where an operator was written by hand in this
+///   package's formula operators — speed × time, force ÷ acceleration, and so on. There is
+///   no general dimensional algebra, so a combination nobody wrote is a compile error
+///   rather than a wrong result.
+/// - `Codable` writes only the base-unit number, under a single key, with no unit or
+///   dimension recorded. A mass payload therefore decodes into a length without complaint,
+///   and the `UnitType: Codable` constraint on the conformance is never exercised.
+/// - A unit that needs an offset is silently wrong here. `Measurement<TemperatureUnit>`
+///   compiles and reads 20 °C as 20 K, because ``TemperatureUnit`` only carries the scale
+///   part of the conversion. Use ``Temperature`` for absolute temperatures.
+///
+/// - Note: Equality and hashing compare the stored base-unit `Double` exactly. Two values
+///   that are mathematically equal can differ in their last bits after conversion, so
+///   compare with a tolerance where that matters.
 @frozen
 public struct Measurement<UnitType: Unit>: Sendable, Hashable {
-    /// 基準単位での内部値
+    /// The value in the dimension's base unit: the gram for mass, the meter for length,
+    /// the second for time.
     @usableFromInline
     internal let baseValue: Double
 
     // MARK: - Initializers
 
-    /// 指定単位で初期化
+    /// Converts `value` from `unit` into the base unit and stores only the result.
     ///
-    /// - Parameters:
-    ///   - value: 値
-    ///   - unit: 単位
+    /// The unit is not retained, so nothing later can report which unit the value was
+    /// written in.
     @inlinable
     public init(_ value: Double, unit: UnitType) {
         self.baseValue = value * unit.coefficientToBase
     }
 
-    /// 整数値で初期化
-    ///
-    /// - Parameters:
-    ///   - value: 整数値
-    ///   - unit: 単位
     @inlinable
     public init(_ value: Int, unit: UnitType) {
         self.baseValue = Double(value) * unit.coefficientToBase
     }
 
-    /// 基準単位の値で直接初期化（内部使用）
+    /// Stores a base-unit value with no conversion.
+    ///
+    /// This is how the formula operators build a result whose dimension differs from their
+    /// operands', since a base-unit number is all they have.
     @usableFromInline
     internal init(baseValue: Double) {
         self.baseValue = baseValue
@@ -54,10 +72,10 @@ public struct Measurement<UnitType: Unit>: Sendable, Hashable {
 
     // MARK: - Value Access
 
-    /// 指定単位で値を取得
+    /// Divides the stored base-unit value by the unit's coefficient.
     ///
-    /// - Parameter unit: 取得したい単位
-    /// - Returns: 指定単位での値
+    /// Both directions round, so a value written in one unit and read back in another can
+    /// come out a few bits off the number that was written.
     @inlinable
     public func value(in unit: UnitType) -> Double {
         baseValue / unit.coefficientToBase
@@ -76,19 +94,16 @@ extension Measurement: Comparable {
 // MARK: - AdditiveArithmetic
 
 extension Measurement: AdditiveArithmetic {
-    /// ゼロ値
     @inlinable
     public static var zero: Measurement<UnitType> {
         Measurement(baseValue: 0)
     }
 
-    /// 加算
     @inlinable
     public static func + (lhs: Measurement<UnitType>, rhs: Measurement<UnitType>) -> Measurement<UnitType> {
         Measurement(baseValue: lhs.baseValue + rhs.baseValue)
     }
 
-    /// 減算
     @inlinable
     public static func - (lhs: Measurement<UnitType>, rhs: Measurement<UnitType>) -> Measurement<UnitType> {
         Measurement(baseValue: lhs.baseValue - rhs.baseValue)
@@ -98,25 +113,26 @@ extension Measurement: AdditiveArithmetic {
 // MARK: - Scalar Multiplication
 
 extension Measurement {
-    /// スカラー乗算（Measurement * Double）
     @inlinable
     public static func * (lhs: Measurement<UnitType>, rhs: Double) -> Measurement<UnitType> {
         Measurement(baseValue: lhs.baseValue * rhs)
     }
 
-    /// スカラー乗算（Double * Measurement）
     @inlinable
     public static func * (lhs: Double, rhs: Measurement<UnitType>) -> Measurement<UnitType> {
         Measurement(baseValue: lhs * rhs.baseValue)
     }
 
-    /// スカラー除算
     @inlinable
     public static func / (lhs: Measurement<UnitType>, rhs: Double) -> Measurement<UnitType> {
         Measurement(baseValue: lhs.baseValue / rhs)
     }
 
-    /// 測定値同士の比率
+    /// Returns the ratio of two measurements of the same dimension.
+    ///
+    /// The unit cancels, so the result is a dimensionless `Double` and the compiler stops
+    /// tracking what it measures. Dividing by a zero measurement gives an infinity or a
+    /// NaN, as `Double` division does.
     @inlinable
     public static func / (lhs: Measurement<UnitType>, rhs: Measurement<UnitType>) -> Double {
         lhs.baseValue / rhs.baseValue
@@ -126,25 +142,21 @@ extension Measurement {
 // MARK: - Compound Assignment
 
 extension Measurement {
-    /// 複合加算代入
     @inlinable
     public static func += (lhs: inout Measurement<UnitType>, rhs: Measurement<UnitType>) {
         lhs = lhs + rhs
     }
 
-    /// 複合減算代入
     @inlinable
     public static func -= (lhs: inout Measurement<UnitType>, rhs: Measurement<UnitType>) {
         lhs = lhs - rhs
     }
 
-    /// 複合乗算代入
     @inlinable
     public static func *= (lhs: inout Measurement<UnitType>, rhs: Double) {
         lhs = lhs * rhs
     }
 
-    /// 複合除算代入
     @inlinable
     public static func /= (lhs: inout Measurement<UnitType>, rhs: Double) {
         lhs = lhs / rhs
@@ -172,7 +184,12 @@ extension Measurement: Codable where UnitType: Codable {
 // MARK: - CustomStringConvertible
 
 extension Measurement: CustomStringConvertible where UnitType: Unit {
-    /// 基準単位での値を文字列として表示
+    /// The base-unit magnitude to four significant digits, followed by the literal text
+    /// `(base units)`.
+    ///
+    /// No symbol appears, because a measurement does not keep the unit it was built from.
+    /// `Mass(70, unit: .kilograms)` prints `7e+04 (base units)`, grams being the base unit.
+    /// Format the value yourself when a reader needs to know the unit.
     public var description: String {
         String(format: "%.4g (base units)", baseValue)
     }
@@ -181,25 +198,29 @@ extension Measurement: CustomStringConvertible where UnitType: Unit {
 // MARK: - Numeric Utilities
 
 extension Measurement {
-    /// 絶対値
+    /// The absolute value, as a measurement of the same dimension.
+    ///
+    /// Named after `Numeric.magnitude`, but ``Measurement`` does not conform to `Numeric`
+    /// and this returns a measurement rather than a bare number.
     @inlinable
     public var magnitude: Measurement<UnitType> {
         Measurement(baseValue: abs(baseValue))
     }
 
-    /// 負かどうか
     @inlinable
     public var isNegative: Bool {
         baseValue < 0
     }
 
-    /// ゼロかどうか
+    /// Whether the base-unit value is exactly zero.
+    ///
+    /// The test is `== 0`, so a value that only rounds to zero is not zero here, and
+    /// ``isNegative``, ``isZero``, and ``isPositive`` are all false for a NaN.
     @inlinable
     public var isZero: Bool {
         baseValue == 0
     }
 
-    /// 正かどうか
     @inlinable
     public var isPositive: Bool {
         baseValue > 0
@@ -209,10 +230,10 @@ extension Measurement {
 // MARK: - Clamping
 
 extension Measurement {
-    /// 指定範囲内に収める
+    /// Returns the value held inside `range`.
     ///
-    /// - Parameter range: 許容範囲
-    /// - Returns: 範囲内に収められた値
+    /// The comparison runs on the stored base-unit numbers, so the units the bounds were
+    /// written in make no difference to the result.
     @inlinable
     public func clamped(to range: ClosedRange<Measurement<UnitType>>) -> Measurement<UnitType> {
         Measurement(baseValue: max(range.lowerBound.baseValue, min(baseValue, range.upperBound.baseValue)))

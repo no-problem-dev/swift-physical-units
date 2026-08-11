@@ -1,17 +1,25 @@
 import Foundation
 
-/// 面積の単位
+/// A unit of area, from square millimetres up to acres.
 ///
-/// 面積は長さの二乗の導出単位。SI 基本単位は平方メートル (m²)。
-/// 土地面積にはヘクタール (ha) やエーカーが広く使われる。
+/// Area is length squared and the base unit is the square metre. Land is quoted in hectares or
+/// acres rather than in m², so both are cases here.
 ///
-/// ## 変換関係
+/// ## Conversions
+/// Every factor is exact by definition:
 /// - 1 km² = 1,000,000 m²
 /// - 1 ha = 10,000 m²
-/// - 1 a (アール) = 100 m²
-/// - 1 acre ≈ 4,046.86 m²
+/// - 1 a = 100 m²
+/// - 1 acre = 4046.8564224 m², the international acre: 4840 yd² at exactly 0.9144 m to the yard
 ///
-/// ## 使用例
+/// The cm² and mm² factors (`1e-4`, `1e-6`) are exact decimals with no exact binary form, so
+/// they are held as the nearest `Double`. The US survey acre (≈ 4046.8726 m²) is a different
+/// unit and is not offered here.
+///
+/// - Note: There is no `Length × Length` operator, so multiplying two lengths will not give you
+///   an `Area`. Build one with `Area(_:unit:)`, or divide a `Force` by a `Pressure`.
+///
+/// ## Example
 /// ```swift
 /// let field = Area(2.5, unit: .hectares)
 /// print(field.squareMeters)  // 25000.0
@@ -21,50 +29,47 @@ import Foundation
 /// ```
 @frozen
 public enum AreaUnit: Unit, Codable, Sendable, Hashable {
-    /// 平方メートル (m²) - SI 導出単位
+    /// The square metre, the SI derived unit of area and the base of this type.
     case squareMeters
 
-    /// 平方センチメートル (cm²)
     case squareCentimeters
 
-    /// 平方ミリメートル (mm²)
     case squareMillimeters
 
-    /// 平方キロメートル (km²)
     case squareKilometers
 
-    /// アール (a) = 100 m²
+    /// The are (a): exactly 100 m², a 10 m square. Still used in land registries.
     case ares
 
-    /// ヘクタール (ha) = 10,000 m²
+    /// The hectare (ha): exactly 10,000 m².
     case hectares
 
-    /// エーカー (acre)
+    /// The international acre: exactly 4046.8564224 m². Not the US survey acre.
     case acres
 
     // MARK: - Constants
 
-    /// cm² → m² 変換係数
+    /// Square centimetres to square metres: exactly 1e-4, held as the nearest `Double`.
     public static let squareCmToM: Double = 1e-4
 
-    /// mm² → m² 変換係数
+    /// Square millimetres to square metres: exactly 1e-6, held as the nearest `Double`.
     public static let squareMmToM: Double = 1e-6
 
-    /// km² → m² 変換係数
+    /// Square kilometres to square metres: exactly 1e6.
     public static let squareKmToM: Double = 1e6
 
-    /// アール → m² 変換係数
+    /// Ares to square metres: exactly 100.
     public static let aresToM: Double = 100.0
 
-    /// ヘクタール → m² 変換係数
+    /// Hectares to square metres: exactly 10,000.
     public static let hectaresToM: Double = 10_000.0
 
-    /// エーカー → m² 変換係数
+    /// International acres to square metres: exactly 4046.8564224, the full defined value.
     public static let acresToM: Double = 4046.8564224
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（m²）への変換係数
+    /// The factor that converts a value in this unit to square metres.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -85,7 +90,7 @@ public enum AreaUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
+    /// The symbol: "m²", "cm²", "mm²", "km²", "a", "ha", and "ac" for the acre.
     public var symbol: String {
         switch self {
         case .squareMeters:
@@ -116,12 +121,11 @@ extension AreaUnit: CustomStringConvertible {
 
 // MARK: - Area Type Alias
 
-/// 面積
+/// An area, stored in square metres.
 ///
-/// `Measurement<AreaUnit>` の型エイリアス。
-/// 面積を型安全に表現する。
+/// A type alias for `Measurement<AreaUnit>`.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let room = Area(20, unit: .squareMeters)
 /// print(room.squareCentimeters)  // 200000.0
@@ -134,43 +138,36 @@ public typealias Area = Measurement<AreaUnit>
 // MARK: - Area Convenience Accessors
 
 extension Area {
-    /// 平方メートル単位で値を取得
     @inlinable
     public var squareMeters: Double {
         value(in: .squareMeters)
     }
 
-    /// 平方センチメートル単位で値を取得
     @inlinable
     public var squareCentimeters: Double {
         value(in: .squareCentimeters)
     }
 
-    /// 平方ミリメートル単位で値を取得
     @inlinable
     public var squareMillimeters: Double {
         value(in: .squareMillimeters)
     }
 
-    /// 平方キロメートル単位で値を取得
     @inlinable
     public var squareKilometers: Double {
         value(in: .squareKilometers)
     }
 
-    /// アール単位で値を取得
     @inlinable
     public var ares: Double {
         value(in: .ares)
     }
 
-    /// ヘクタール単位で値を取得
     @inlinable
     public var hectares: Double {
         value(in: .hectares)
     }
 
-    /// エーカー単位で値を取得
     @inlinable
     public var acres: Double {
         value(in: .acres)
@@ -180,7 +177,10 @@ extension Area {
 // MARK: - Area Formatting
 
 extension Area {
-    /// 適切な単位で自動フォーマット
+    /// A string in the largest metric unit the value reaches, from km² down to mm².
+    ///
+    /// Chosen by magnitude: km² from 1,000,000 m² up, then ha, m², cm², mm². Ares and acres are
+    /// never picked. m² and above print with two decimals, cm² and mm² with one.
     public var formatted: String {
         let m2 = squareMeters
         if abs(m2) >= 1_000_000 {

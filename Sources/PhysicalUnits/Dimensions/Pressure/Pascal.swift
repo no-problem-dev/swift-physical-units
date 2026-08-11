@@ -1,20 +1,22 @@
 import Foundation
 
-/// パスカル - 圧力の SI 導出単位
+/// The pascal, the SI derived unit of pressure.
 ///
 /// 1 Pa = 1 N/m² = 1 kg⋅m⁻¹⋅s⁻²
 ///
-/// ## 使用例
+/// This is the phantom base a `MetricUnit<Pascal>` is built on, giving the SI prefixes and
+/// nothing else. ``Pressure`` values are measured in ``PressureUnit``, which carries bar, atm,
+/// torr, and psi alongside the prefixed pascals.
+///
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Pascal>(.hecto)  // ヘクトパスカル
+/// let unit = MetricUnit<Pascal>(.hecto)  // hectopascals
 /// print(unit.symbol)  // "hPa"
 /// ```
 @frozen
 public struct Pascal: BaseUnit {
-    /// 単位記号
     public static let symbol = "Pa"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

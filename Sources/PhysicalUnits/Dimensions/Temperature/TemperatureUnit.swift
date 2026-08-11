@@ -1,17 +1,22 @@
 import Foundation
 
-/// 温度の単位
+/// A temperature scale: kelvin, Celsius, or Fahrenheit.
 ///
-/// 温度は他の物理量と異なり、単純な倍率変換ではなく
-/// オフセット変換が必要（摂氏・華氏）。
+/// Temperature is the one dimension here that does not convert by a bare multiplier — the
+/// Celsius and Fahrenheit scales are offset from kelvin as well as scaled. ``Temperature``
+/// carries absolute readings and applies those offsets; ``TemperatureDelta`` carries
+/// differences, which need only the multiplier.
 ///
-/// ## 変換式
+/// ## Conversions
 /// - Kelvin → Celsius: °C = K - 273.15
 /// - Kelvin → Fahrenheit: °F = K × 9/5 - 459.67
 /// - Celsius → Kelvin: K = °C + 273.15
 /// - Fahrenheit → Kelvin: K = (°F + 459.67) × 5/9
 ///
-/// ## 使用例
+/// All four are exact: 273.15, 459.67, and the 9/5 ratio define the scales. They are not
+/// measured values that a later revision could refine.
+///
+/// ## Example
 /// ```swift
 /// let bodyTemp = Temperature(37, unit: .celsius)
 /// print(bodyTemp.fahrenheit)  // 98.6
@@ -19,45 +24,50 @@ import Foundation
 /// ```
 @frozen
 public enum TemperatureUnit: Unit, Codable, Sendable, Hashable {
-    /// ケルビン（SI 基本単位）
+    /// Kelvin, the SI base unit and the scale readings are stored in.
     case kelvin
 
-    /// 摂氏（セルシウス）
+    /// Degrees Celsius: the same degree size as the kelvin, offset by exactly 273.15.
     case celsius
 
-    /// 華氏（ファーレンハイト）
+    /// Degrees Fahrenheit: a degree of exactly 5/9 K, on a scale where 0 K reads -459.67 °F.
     case fahrenheit
 
     // MARK: - Constants
 
-    /// 絶対零度からのオフセット（K to °C）
+    /// The kelvin value of 0 °C, exactly 273.15 by the definition of the Celsius scale.
     public static let celsiusOffset: Double = 273.15
 
-    /// 華氏のオフセット
+    /// The 459.67 term in °F = K × 9/5 - 459.67, exact by the definition of the Fahrenheit scale.
     public static let fahrenheitOffset: Double = 459.67
 
-    /// 華氏の倍率（K to °F）
+    /// Degrees Fahrenheit per kelvin, exactly 9/5.
     public static let fahrenheitScale: Double = 9.0 / 5.0
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（ケルビン）への変換係数
+    /// How many kelvins one degree of this scale spans — a factor for intervals, not readings.
     ///
-    /// 温度は線形変換ではないため、この値は相対的な温度差の変換にのみ使用する。
-    /// 絶対温度の変換には `Temperature` 型の専用メソッドを使用する。
+    /// A single multiplier cannot carry the 273.15 K and 459.67 °F offsets, so this converts
+    /// "5 degrees warmer" and never "5 degrees outside". ``TemperatureDelta`` is built on it;
+    /// ``Temperature`` ignores it and applies the offsets itself.
+    ///
+    /// - Warning: Nothing stops this being taken for an absolute conversion factor. Because the
+    ///   enum conforms to `Unit`, `Measurement<TemperatureUnit>(20, unit: .celsius)` compiles
+    ///   and stores 20, not 293.15 — the type checker guards dimensions, not scale offsets.
+    ///   Absolute readings belong in ``Temperature``.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
         case .kelvin:
             return 1.0
         case .celsius:
-            return 1.0  // 1°C の差 = 1K の差
+            return 1.0  // A 1 °C difference is a 1 K difference
         case .fahrenheit:
-            return 5.0 / 9.0  // 1°F の差 = 5/9 K の差
+            return 5.0 / 9.0  // A 1 °F difference is a 5/9 K difference
         }
     }
 
-    /// 単位記号
     public var symbol: String {
         switch self {
         case .kelvin:
@@ -80,12 +90,14 @@ extension TemperatureUnit: CustomStringConvertible {
 
 // MARK: - Temperature Type
 
-/// 温度
+/// An absolute temperature, stored in kelvin.
 ///
-/// 絶対温度を表現する型。内部ではケルビン (K) で値を保持する。
-/// 温度は他の物理量と異なり、オフセット変換が必要なため専用の型として実装している。
+/// Initializing from Celsius or Fahrenheit adds that scale's offset and reading back subtracts
+/// it, so a value survives a round trip through any scale. Differences between readings are a
+/// separate type, ``TemperatureDelta``; that separation is what keeps "20 °C" from being added
+/// to "20 °C".
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let room = Temperature(20, unit: .celsius)
 /// print(room.kelvin)      // 293.15
@@ -96,17 +108,19 @@ extension TemperatureUnit: CustomStringConvertible {
 /// ```
 @frozen
 public struct Temperature: Sendable, Hashable, Comparable, Codable {
-    /// ケルビンでの内部値
     @usableFromInline
     internal let kelvinValue: Double
 
     // MARK: - Initializers
 
-    /// 指定単位で初期化
+    /// Creates a temperature from a reading on the given scale.
+    ///
+    /// Celsius and Fahrenheit readings are shifted by their offsets, so this is not the same
+    /// operation as scaling an interval.
     ///
     /// - Parameters:
-    ///   - value: 温度値
-    ///   - unit: 単位
+    ///   - value: The reading, expressed on the scale named by `unit`.
+    ///   - unit: The scale `value` is written on.
     @inlinable
     public init(_ value: Double, unit: TemperatureUnit) {
         switch unit {
@@ -119,7 +133,7 @@ public struct Temperature: Sendable, Hashable, Comparable, Codable {
         }
     }
 
-    /// ケルビン値で直接初期化（内部使用）
+    /// Wraps a value that is already in kelvin, skipping the scale conversion.
     @usableFromInline
     internal init(kelvinValue: Double) {
         self.kelvinValue = kelvinValue
@@ -127,7 +141,7 @@ public struct Temperature: Sendable, Hashable, Comparable, Codable {
 
     // MARK: - Value Access
 
-    /// 指定単位で値を取得
+    /// Returns the reading on the given scale, with that scale's offset applied.
     @inlinable
     public func value(in unit: TemperatureUnit) -> Double {
         switch unit {
@@ -140,19 +154,16 @@ public struct Temperature: Sendable, Hashable, Comparable, Codable {
         }
     }
 
-    /// ケルビン単位で値を取得
     @inlinable
     public var kelvin: Double {
         value(in: .kelvin)
     }
 
-    /// 摂氏単位で値を取得
     @inlinable
     public var celsius: Double {
         value(in: .celsius)
     }
 
-    /// 華氏単位で値を取得
     @inlinable
     public var fahrenheit: Double {
         value(in: .fahrenheit)
@@ -165,21 +176,27 @@ public struct Temperature: Sendable, Hashable, Comparable, Codable {
         lhs.kelvinValue < rhs.kelvinValue
     }
 
-    // MARK: - Arithmetic (温度差の演算)
+    // MARK: - Arithmetic (interval operations)
 
-    /// 温度差の加算
+    /// Shifts a reading up by an interval.
+    ///
+    /// Adding two absolute temperatures is deliberately absent: on an offset scale the answer
+    /// would depend on which scale the operands happened to be written in.
     @inlinable
     public static func + (lhs: Temperature, rhs: TemperatureDelta) -> Temperature {
         Temperature(kelvinValue: lhs.kelvinValue + rhs.kelvinDelta)
     }
 
-    /// 温度差の減算
+    /// Shifts a reading down by an interval.
     @inlinable
     public static func - (lhs: Temperature, rhs: TemperatureDelta) -> Temperature {
         Temperature(kelvinValue: lhs.kelvinValue - rhs.kelvinDelta)
     }
 
-    /// 温度間の差を計算
+    /// Returns the interval between two readings.
+    ///
+    /// The offsets cancel, so the answer is the same number of kelvins whichever scale the two
+    /// readings were written on.
     @inlinable
     public static func - (lhs: Temperature, rhs: Temperature) -> TemperatureDelta {
         TemperatureDelta(kelvinDelta: lhs.kelvinValue - rhs.kelvinValue)
@@ -193,33 +210,42 @@ public struct Temperature: Sendable, Hashable, Comparable, Codable {
 
     // MARK: - Special Values
 
-    /// 絶対零度
+    /// 0 K, which is -273.15 °C and -459.67 °F.
     public static let absoluteZero = Temperature(0, unit: .kelvin)
 
-    /// 水の凝固点（標準気圧）
+    /// 0 °C, the conventional freezing point of water at standard pressure.
+    ///
+    /// The stored value is exactly 273.15 K because that is how the Celsius scale is defined.
+    /// Water's measured freezing point sits close to it but is not what fixes the number.
     public static let waterFreezingPoint = Temperature(0, unit: .celsius)
 
-    /// 水の沸点（標準気圧）
+    /// 100 °C, the conventional boiling point of water at standard pressure.
+    ///
+    /// A scale convention inherited from the original Celsius definition rather than a
+    /// measurement: on ITS-90, water at 1 atm boils at roughly 99.98 °C.
     public static let waterBoilingPoint = Temperature(100, unit: .celsius)
 
-    /// 人体の標準体温
+    /// 37 °C, the conventional normal human body temperature.
+    ///
+    /// A round convention, not a physical constant — normal readings vary with the person, the
+    /// measurement site, and the time of day.
     public static let bodyTemperature = Temperature(37, unit: .celsius)
 }
 
 // MARK: - Temperature Formatting
 
 extension Temperature {
-    /// 摂氏でフォーマット
+    /// The Celsius reading to one decimal place, suffixed "°C".
     public var formattedCelsius: String {
         String(format: "%.1f°C", celsius)
     }
 
-    /// 華氏でフォーマット
+    /// The Fahrenheit reading to one decimal place, suffixed "°F".
     public var formattedFahrenheit: String {
         String(format: "%.1f°F", fahrenheit)
     }
 
-    /// ケルビンでフォーマット
+    /// The kelvin reading to two decimal places, with the space before "K" that SI calls for.
     public var formattedKelvin: String {
         String(format: "%.2f K", kelvin)
     }
@@ -227,42 +253,45 @@ extension Temperature {
 
 // MARK: - TemperatureDelta
 
-/// 温度差
+/// A difference between two temperatures.
 ///
-/// 2つの温度間の差を表す型。温度差は線形的に扱える。
+/// Differences convert by a plain factor — 1 °C of difference is 1 K, 1 °F is 5/9 K — because
+/// the scale offsets cancel. Keeping them in their own type is what stops an interval being
+/// read as an absolute reading, which dimension checking alone would never catch.
 @frozen
 public struct TemperatureDelta: Sendable, Hashable, Comparable, Codable, AdditiveArithmetic {
-    /// ケルビンでの温度差
     @usableFromInline
     internal let kelvinDelta: Double
 
-    /// 指定単位で初期化
+    /// Creates an interval from a difference expressed on the given scale.
+    ///
+    /// - Warning: This takes a difference, not a reading. `TemperatureDelta(20, unit: .celsius)`
+    ///   is 20 K of difference, not 293.15 K; a reading belongs in ``Temperature``.
     @inlinable
     public init(_ value: Double, unit: TemperatureUnit) {
         self.kelvinDelta = value * unit.coefficientToBase
     }
 
-    /// ケルビン値で直接初期化（内部使用）
+    /// Wraps a value that is already a difference in kelvin.
     @usableFromInline
     internal init(kelvinDelta: Double) {
         self.kelvinDelta = kelvinDelta
     }
 
-    /// 指定単位で値を取得
+    /// Returns the interval expressed on the given scale, with no offset applied.
     @inlinable
     public func value(in unit: TemperatureUnit) -> Double {
         kelvinDelta / unit.coefficientToBase
     }
 
-    /// ケルビンでの温度差
     @inlinable
     public var kelvin: Double { kelvinDelta }
 
-    /// 摂氏での温度差
+    /// The interval in degrees Celsius, numerically identical to the kelvin value.
     @inlinable
     public var celsius: Double { kelvinDelta }
 
-    /// 華氏での温度差
+    /// The interval in degrees Fahrenheit, which is 9/5 of the kelvin value.
     @inlinable
     public var fahrenheit: Double { kelvinDelta * TemperatureUnit.fahrenheitScale }
 

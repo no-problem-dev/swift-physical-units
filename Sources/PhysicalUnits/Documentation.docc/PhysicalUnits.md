@@ -1,41 +1,48 @@
 # ``PhysicalUnits``
 
-型安全な物理量を Swift で扱うためのライブラリ。
+Physical quantities as Swift types, with unit consistency checked by the compiler.
 
 ## Overview
 
-PhysicalUnits は、物理量（質量・長さ・時間・エネルギーなど）を型安全に表現し、単位変換を正確に行うフレームワーク。
-
-異なる次元の値（例: `Mass` と `Length`）を誤って加算しようとするとコンパイルエラーになるため、実行時エラーを型レベルで排除できる。
+A quantity in this library carries its dimension in its type. `Mass` and `Length` are distinct
+types, so adding one to the other is a build error rather than a number that is quietly wrong by
+a factor of a thousand. Conversion happens on the way in and on the way out; in between, a
+measurement is a single `Double` held in the dimension's base unit.
 
 ```swift
 import PhysicalUnits
 
-// 単位変換
+// Convert by asking for the unit you want.
 let weight = Mass(70, unit: .kilograms)
-print(weight.grams)        // 70000.0
+print(weight.grams)                 // 70000.0
 
 let height = Length(175, unit: .centimeters)
-print(height.meters)       // 1.75
+print(height.meters)                // 1.75
 
-// 物理演算子（次元をまたいだ演算）
-let speed = Speed(60, unit: .kilometersPerHour)
-let time  = Duration(2, unit: .hours)
-let dist: Length = speed * time   // 120 km
+// Cross-dimension formulas are typed operators, so the result dimension is inferred.
+let voltage = Voltage(100, unit: .volts)
+let current = Current(5, unit: .amperes)
+let power: Power = voltage * current
+print(power.watts)                  // 500.0
 
-// 電気回路
-let v: Voltage  = Voltage(100, unit: .volts)
-let i: Current  = Current(5,   unit: .amperes)
-let p: Power    = v * i          // 500 W (P = V × I)
+// Absolute temperatures and temperature differences are separate types,
+// because Celsius and Fahrenheit convert with an offset.
+let body = Temperature(37, unit: .celsius)
+let fever = body + TemperatureDelta(1.5, unit: .celsius)
+print(fever.fahrenheit)             // 101.3
 ```
+
+Read <doc:Architecture> for how the layers fit together, which conversion factors are exact, and
+the cases the compiler cannot catch for you.
 
 ## Topics
 
-### 基本
+### Essentials
 
 - <doc:GettingStarted>
+- <doc:Architecture>
 
-### コアプロトコルと共通型
+### Core protocols and shared types
 
 - ``Unit``
 - ``BaseUnit``
@@ -43,7 +50,7 @@ let p: Power    = v * i          // 500 W (P = V × I)
 - ``MetricUnit``
 - ``Measurement``
 
-### 力学・運動
+### Mechanics and motion
 
 - ``Mass``
 - ``MassUnit``
@@ -64,7 +71,7 @@ let p: Power    = v * i          // 500 W (P = V × I)
 - ``Pressure``
 - ``PressureUnit``
 
-### 電気
+### Electricity
 
 - ``Current``
 - ``CurrentUnit``
@@ -77,7 +84,7 @@ let p: Power    = v * i          // 500 W (P = V × I)
 - ``Frequency``
 - ``FrequencyUnit``
 
-### 幾何・その他
+### Geometry and the rest
 
 - ``Area``
 - ``AreaUnit``
@@ -90,3 +97,18 @@ let p: Power    = v * i          // 500 W (P = V × I)
 - ``Temperature``
 - ``TemperatureDelta``
 - ``TemperatureUnit``
+
+### Base units
+
+- ``Meter``
+- ``Gram``
+- ``Second``
+- ``Liter``
+- ``Ampere``
+- ``Volt``
+- ``Ohm``
+- ``Coulomb``
+- ``Hertz``
+- ``Newton``
+- ``Watt``
+- ``Pascal``

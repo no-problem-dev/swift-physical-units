@@ -1,51 +1,56 @@
 import Foundation
 
-/// 長さの単位
+/// A unit of length: an SI prefix applied to the meter.
 ///
-/// `MetricUnit<Meter>` の型エイリアス。
-/// 接頭辞を変えることで、メートル、センチメートル、キロメートルなどを表現できる。
+/// Every case is a power of ten away from the meter, so every conversion in this dimension is
+/// exact by definition — 1 km = 1000 m, 1 cm = 0.01 m. There are no imperial units here: no
+/// inches, feet, yards or miles, and so none of the rounding they would bring.
+///
+/// The factors are `Double`s, though, and only the non-negative powers of ten are exactly
+/// representable. `kilo` scales exactly; `centi`, `milli`, `micro` and `nano` multiply by a
+/// rounded factor, which can leave the low bits off a converted value.
+///
+/// Seven prefixes get a shorthand below. ``MetricPrefix`` has fifteen cases in all, from
+/// `femto` (10⁻¹⁵) to `peta` (10¹⁵), and any of them can be passed directly:
+/// `LengthUnit(.hecto)`.
 public typealias LengthUnit = MetricUnit<Meter>
 
 // MARK: - Convenience Static Properties
 
 extension LengthUnit {
-    /// メートル (m)
     @inlinable
     public static var meters: LengthUnit {
         LengthUnit(.base)
     }
 
-    /// センチメートル (cm)
     @inlinable
     public static var centimeters: LengthUnit {
         LengthUnit(.centi)
     }
 
-    /// ミリメートル (mm)
     @inlinable
     public static var millimeters: LengthUnit {
         LengthUnit(.milli)
     }
 
-    /// キロメートル (km)
     @inlinable
     public static var kilometers: LengthUnit {
         LengthUnit(.kilo)
     }
 
-    /// マイクロメートル (μm)
     @inlinable
     public static var micrometers: LengthUnit {
         LengthUnit(.micro)
     }
 
-    /// ナノメートル (nm)
     @inlinable
     public static var nanometers: LengthUnit {
         LengthUnit(.nano)
     }
 
-    /// デシメートル (dm)
+    /// Decimeter (dm), exactly 0.1 m.
+    ///
+    /// `Length` has no matching accessor, so read a value back with `value(in: .decimeters)`.
     @inlinable
     public static var decimeters: LengthUnit {
         LengthUnit(.deci)
@@ -54,12 +59,13 @@ extension LengthUnit {
 
 // MARK: - Length Type Alias
 
-/// 長さ
+/// A length, stored internally in meters.
 ///
-/// `Measurement<LengthUnit>` の型エイリアス。
-/// 長さを型安全に表現する。
+/// This is the length that the mechanics and kinematics operators consume and produce, so
+/// `Energy / Force` comes back as meters and `Speed × Duration` as a distance in meters,
+/// whatever unit the operands were written in.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let height = Length(175, unit: .centimeters)
 /// print(height.meters)  // 1.75
@@ -72,37 +78,31 @@ public typealias Length = Measurement<LengthUnit>
 // MARK: - Length Convenience Accessors
 
 extension Length {
-    /// メートル単位で値を取得
     @inlinable
     public var meters: Double {
         value(in: .meters)
     }
 
-    /// センチメートル単位で値を取得
     @inlinable
     public var centimeters: Double {
         value(in: .centimeters)
     }
 
-    /// ミリメートル単位で値を取得
     @inlinable
     public var millimeters: Double {
         value(in: .millimeters)
     }
 
-    /// キロメートル単位で値を取得
     @inlinable
     public var kilometers: Double {
         value(in: .kilometers)
     }
 
-    /// マイクロメートル単位で値を取得
     @inlinable
     public var micrometers: Double {
         value(in: .micrometers)
     }
 
-    /// ナノメートル単位で値を取得
     @inlinable
     public var nanometers: Double {
         value(in: .nanometers)
@@ -112,9 +112,10 @@ extension Length {
 // MARK: - Length CustomStringConvertible
 
 extension Length {
-    /// 適切な単位で自動フォーマット
+    /// The value in the largest metric multiple that fits: km from 1000 m, then m, cm, mm, and μm below 1 mm.
     ///
-    /// 値の大きさに応じて適切な単位を自動選択。
+    /// Always two decimals. Decimeters and nanometers are never chosen, so anything smaller
+    /// than a millimeter prints as a fraction of a micrometer and zero prints as `0.00 μm`.
     public var formatted: String {
         let m = meters
         if abs(m) >= 1000 {

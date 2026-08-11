@@ -1,177 +1,77 @@
-[English](./README.md) | 日本語
-
 # PhysicalUnits
+
+物理量を Swift の型として扱う。単位の整合性はコンパイラが検査し、実行時の測定値は 8 バイトのままにする。
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20watchOS%20|%20tvOS%20|%20visionOS-blue.svg)](https://developer.apple.com/swift/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Swift で物理単位を型安全に扱うライブラリ。コンパイル時に単位の整合性を検証し、実行時のオーバーヘッドを最小限に抑える。
+[English](./README.md) | 日本語
 
 ## 特徴
 
-- **型安全な単位変換**: 異なる単位間の変換をコンパイル時に検証
-- **物理公式の演算子**: `F = m * a`、`E = F * d`、`P = V * I` などの物理公式を自然な構文で記述
-- **SI プレフィックス対応**: `MetricUnit<BaseUnit>` パターンにより nano から tera まで自動対応
-- **高パフォーマンス**: `@frozen`、`@inlinable` を活用した最適化
-- **マルチプラットフォーム**: iOS、macOS、watchOS、tvOS、visionOS 対応
-
-## インストール
-
-### Swift Package Manager
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/no-problem-dev/swift-physical-units.git", from: "1.0.0")
-]
-```
+- **次元が型** — `Length` と `Duration` を足すコードはコンパイルが通らない。単位の取り違えは本番の誤った数値ではなくビルドエラーになる
+- **物理公式が演算子** — `F = m * a`、`E = F * d`、`P = V * I`、`v = d / t` などよく使う関係を型付きの演算子として用意してあるので、結果の次元は推論される
+- **SI 接頭辞は自動** — `BaseUnit` 1 つと `MetricUnit<BaseUnit>` で、その次元の接頭辞付き単位が case を手書きせずに揃う
+- **実行時のコストを払わない** — `Measurement` は基準単位の `Double` 1 個を包んだ `@frozen` な型で、演算は `@inlinable`
+- **温度を正しく分ける** — 絶対温度（`Temperature`）と温度差（`TemperatureDelta`）を別の型にしている。摂氏・華氏は倍率ではなくオフセットで変換するため
+- **Apple の全プラットフォーム** — iOS・macOS・watchOS・tvOS・visionOS に対応。Foundation 以外の依存はない
 
 ## 使い方
-
-### 基本的な単位変換
 
 ```swift
 import PhysicalUnits
 
-// 長さ
-let distance = Length(100, unit: .meters)
-print(distance.kilometers)  // 0.1
-
-// 質量
-let mass = Mass(1, unit: .kilograms)
-print(mass.grams)  // 1000.0
-
-// 時間
-let time = Duration(1, unit: .hours)
-print(time.seconds)  // 3600.0
-```
-
-### 物理公式の計算
-
-```swift
-// 速度 = 距離 / 時間
-let distance = Length(100, unit: .kilometers)
-let time = Duration(2, unit: .hours)
-let speed: Speed = distance / time
-print(speed.kilometersPerHour)  // 50.0
-
-// 力 = 質量 × 加速度
-let mass = Mass(10, unit: .kilograms)
-let acceleration = Acceleration(9.8, unit: .metersPerSecondSquared)
-let force: Force = mass * acceleration
-print(force.newtons)  // 98.0
-
-// 電力 = 電圧 × 電流
-let voltage = Voltage(100, unit: .volts)
-let current = Current(5, unit: .amperes)
-let power: Power = voltage * current
-print(power.watts)  // 500.0
-```
-
-### オームの法則
-
-```swift
-// V = IR
-let current = Current(2, unit: .amperes)
-let resistance = Resistance(50, unit: .ohms)
-let voltage: Voltage = current * resistance
-print(voltage.volts)  // 100.0
-
-// I = V/R
-let current2: Current = voltage / resistance
-print(current2.amperes)  // 2.0
-```
-
-### 回転運動
-
-```swift
-// 角速度
-let angle = Angle(360, unit: .degrees)
-let time = Duration(1, unit: .seconds)
-let angularSpeed: AngularSpeed = angle / time
-print(angularSpeed.rpm)  // 60.0
-
-// 線速度 = 角速度 × 半径
-let radius = Length(0.5, unit: .meters)
-let linearSpeed: Speed = angularSpeed * radius
-print(linearSpeed.metersPerSecond)  // 3.14...
-```
-
-### バッテリー容量
-
-```swift
-// 電荷量
+// バッテリーの持ち時間は 3 つの次元をまたいだ除算になる
 let battery = Charge(milliampereHours: 5000)
-print(battery.ampereHours)  // 5.0
-print(battery.coulombs)  // 18000.0
+let draw = Current(500, unit: .milliamperes)
+let runtime: Duration = battery / draw
+print(runtime.hours)             // 10.0
 
-// 放電時間の計算
-let current = Current(500, unit: .milliamperes)
-let dischargeTime: Duration = battery / current
-print(dischargeTime.hours)  // 10.0
+// 結果の次元は推論される。入力の単位を揃えておく必要もない
+let distance = Length(100, unit: .kilometers)
+let elapsed = Duration(2, unit: .hours)
+let speed: Speed = distance / elapsed
+print(speed.kilometersPerHour)   // 50.0
+
+// let nonsense = distance + elapsed
+// ^ コンパイルエラー。Length と Duration は別の型
 ```
 
-## 対応する次元
+## ドキュメント
 
-### 基本次元
-| 次元 | 型 | 基準単位 |
-|------|-----|---------|
-| 長さ | `Length` | メートル (m) |
-| 質量 | `Mass` | グラム (g) |
-| 時間 | `Duration` | 秒 (s) |
-| 温度 | `Temperature` | ケルビン (K) |
-| 電流 | `Current` | アンペア (A) |
-| 角度 | `Angle` | ラジアン (rad) |
+API リファレンスとガイドは DocC カタログから公開している。
 
-### 派生次元
-| 次元 | 型 | 基準単位 | 公式 |
-|------|-----|---------|-----|
-| 速度 | `Speed` | m/s | v = d/t |
-| 加速度 | `Acceleration` | m/s² | a = v/t |
-| 力 | `Force` | N (kg·m/s²) | F = ma |
-| エネルギー | `Energy` | J (N·m) | E = Fd |
-| 電力 | `Power` | W (J/s) | P = E/t |
-| 電圧 | `Voltage` | V | V = IR |
-| 抵抗 | `Resistance` | Ω | R = V/I |
-| 電荷 | `Charge` | C (A·s) | Q = It |
-| 角速度 | `AngularSpeed` | rad/s | ω = θ/t |
-| 周波数 | `Frequency` | Hz | f = 1/T |
-| 面積 | `Area` | m² | A = l × w |
-| 体積 | `Volume` | m³ | V = l × w × h |
-| 圧力 | `Pressure` | Pa | P = F/A |
+- [PhysicalUnits](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/) — リファレンス全体
+- [Getting Started](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/gettingstarted) — 単位変換・演算・温度・コレクション操作
+- [Architecture](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/architecture) — 層の組み立て方、どの変換が厳密でどれが丸めか、コンパイル時検査がどこで止まるか
 
-## アーキテクチャ
+## インストール
 
+```swift
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/no-problem-dev/swift-physical-units.git", from: "1.0.0")
+]
+
+.target(
+    name: "YourTarget",
+    dependencies: [
+        .product(name: "PhysicalUnits", package: "swift-physical-units")
+    ]
+)
 ```
-PhysicalUnits/
-├── Core/
-│   ├── Measurement.swift      # ジェネリックな測定値型
-│   ├── Unit.swift             # Unit プロトコル
-│   └── MetricUnit.swift       # SI プレフィックス対応
-├── Dimensions/
-│   ├── Length/                # 長さ
-│   ├── Mass/                  # 質量
-│   ├── Time/                  # 時間
-│   ├── Speed/                 # 速度
-│   ├── Acceleration/          # 加速度
-│   ├── Force/                 # 力
-│   ├── Energy/                # エネルギー
-│   ├── Power/                 # 電力
-│   ├── Voltage/               # 電圧
-│   ├── Current/               # 電流
-│   ├── Resistance/            # 抵抗
-│   ├── Charge/                # 電荷
-│   ├── Angle/                 # 角度
-│   ├── AngularSpeed/          # 角速度
-│   ├── Frequency/             # 周波数
-│   └── ...
-└── Formulas/
-    ├── KinematicsOperators.swift   # 運動学
-    ├── MechanicsOperators.swift    # 力学
-    ├── ElectricityOperators.swift  # 電気
-    └── FrequencyOperators.swift    # 周波数・角速度
-```
+
+## 要件
+
+- Swift 6.0+
+- iOS 17+ / macOS 14+ / watchOS 10+ / tvOS 17+ / visionOS 1+
+
+## 開発に参加する
+
+不具合の報告も Pull Request も歓迎する。ビルド・テスト・リリースの手順は
+[CONTRIBUTING.md](CONTRIBUTING.md) を参照。
 
 ## ライセンス
 
-MIT License - 詳細は [LICENSE](LICENSE) を参照。
+MIT License — 詳細は [LICENSE](LICENSE) を参照。

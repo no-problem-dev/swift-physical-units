@@ -1,15 +1,17 @@
 import Foundation
 
-/// 単位の基底プロトコル
+/// A unit that reaches its dimension's base unit by a single multiplication.
 ///
-/// すべての単位型（`MetricUnit`, `EnergyUnit` など）が準拠するプロトコル。
-/// `Measurement` 型のジェネリックパラメータとして使用する。
+/// Every unit type in this package (`MetricUnit`, `EnergyUnit`, and the rest) conforms, and
+/// ``Measurement`` takes a conforming type as its generic parameter. A measurement stores
+/// its value in the base unit, so a conformer only has to say what to multiply by and how
+/// the unit is spelled.
 ///
-/// ## 必須プロパティ
-/// - `coefficientToBase`: 基準単位への変換係数
-/// - `symbol`: 単位記号（例: "kg", "cm", "kcal"）
+/// A conversion that needs an offset does not fit this shape. ``TemperatureUnit`` conforms
+/// anyway, but its coefficient converts temperature *differences* only; absolute
+/// temperatures go through the separate ``Temperature`` type.
 ///
-/// ## 準拠例
+/// ## Conforming
 /// ```swift
 /// struct MyUnit: Unit {
 ///     var coefficientToBase: Double { 1000.0 }
@@ -17,13 +19,16 @@ import Foundation
 /// }
 /// ```
 public protocol Unit: Sendable, Hashable {
-    /// 基準単位への変換係数
+    /// The factor a value in this unit is multiplied by to reach the base unit.
     ///
-    /// 例: キログラム (kg) の係数は 1000（基準がグラムの場合）
+    /// Converting back divides by it. A kilogram returns `1000`, because mass in this
+    /// package converts through the gram.
     var coefficientToBase: Double { get }
 
-    /// 単位記号
+    /// The symbol used when displaying the unit, such as `kg`, `cm`, or `kcal`.
     ///
-    /// 例: "kg", "cm", "kcal"
+    /// Nothing in ``Measurement`` reads it: a measurement does not keep the unit it was
+    /// built from, and its `description` prints the base-unit magnitude only. Pairing a
+    /// number with a symbol is left to the caller.
     var symbol: String { get }
 }

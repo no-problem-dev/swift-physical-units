@@ -1,16 +1,18 @@
 import Foundation
 
-/// 仕事率・電力の単位
+/// A unit of power, mechanical or electrical, convertible to and from watts.
 ///
-/// 仕事率は SI 導出単位で、ワット (W) が基本単位。
-/// 1 W = 1 J/s = 1 kg⋅m²⋅s⁻³
+/// The base unit is the watt (W): 1 W = 1 J/s = 1 kg⋅m²⋅s⁻³.
 ///
-/// ## 変換関係
-/// - 1 kW = 1000 W
-/// - 1 hp (metric) ≈ 735.5 W
-/// - 1 hp (imperial) ≈ 745.7 W
+/// ## Conversions
+/// - 1 kW = 1000 W, exact.
+/// - 1 metric hp = 735.49875 W, exact. It is 75 kgf⋅m/s, that is 75 × 9.80665 W, and the
+///   constant here keeps every digit.
+/// - 1 mechanical (imperial) hp = 745.69987158227022 W exactly, but this library stores
+///   `745.69987158`. Imperial-horsepower conversions are therefore rounded, truncated after
+///   the eleventh significant digit (about 3 parts in 10¹²).
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let motor = Power(5, unit: .kilowatts)
 /// print(motor.horsepower)  // 6.80
@@ -20,38 +22,47 @@ import Foundation
 /// ```
 @frozen
 public enum PowerUnit: Unit, Codable, Sendable, Hashable {
-    /// ワット (W) - SI 導出単位
+    /// Watt (W), the base unit every other case converts against.
     case watts
 
-    /// ミリワット (mW)
+    /// Milliwatt (mW), exactly 10⁻³ W.
     case milliwatts
 
-    /// キロワット (kW)
+    /// Kilowatt (kW), exactly 10³ W.
     case kilowatts
 
-    /// メガワット (MW)
+    /// Megawatt (MW), exactly 10⁶ W.
     case megawatts
 
-    /// ギガワット (GW)
+    /// Gigawatt (GW), exactly 10⁹ W.
     case gigawatts
 
-    /// 馬力 (hp) - メトリック馬力
+    /// Metric horsepower, exactly 735.49875 W (75 kgf⋅m/s).
+    ///
+    /// This is what the plain `hp` symbol and the `Power.horsepower` accessor both mean.
     case horsepower
 
-    /// 英馬力 (hp) - インペリアル馬力
+    /// Mechanical (imperial) horsepower, 550 ft⋅lbf/s, carried at reduced precision.
+    ///
+    /// Stored as 745.69987158 W rather than the exact 745.69987158227022 W. Read a value in
+    /// this unit with `value(in: .horsepowerImperial)`; there is no dedicated accessor.
     case horsepowerImperial
 
     // MARK: - Constants
 
-    /// メトリック馬力 → ワット 変換係数
+    /// Metric horsepower in watts: exactly 75 × 9.80665.
     public static let metricHpToWatts: Double = 735.49875
 
-    /// インペリアル馬力 → ワット 変換係数
+    /// Mechanical horsepower in watts, rounded rather than exact.
+    ///
+    /// 550 ft⋅lbf/s comes to exactly 745.69987158227022 W; the digits past `745.69987158` are
+    /// dropped here, so conversions through this constant carry a relative error of roughly
+    /// 3 × 10⁻¹².
     public static let imperialHpToWatts: Double = 745.69987158
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（ワット）への変換係数
+    /// The multiplier that turns a value in this unit into watts.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -72,7 +83,6 @@ public enum PowerUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
     public var symbol: String {
         switch self {
         case .watts:
@@ -103,12 +113,9 @@ extension PowerUnit: CustomStringConvertible {
 
 // MARK: - Power Type Alias
 
-/// 仕事率・電力
+/// An amount of power, stored internally in watts.
 ///
-/// `Measurement<PowerUnit>` の型エイリアス。
-/// 仕事率・電力を型安全に表現する。
-///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let engine = Power(150, unit: .horsepower)
 /// print(engine.kilowatts)  // 110.32
@@ -121,37 +128,35 @@ public typealias Power = Measurement<PowerUnit>
 // MARK: - Power Convenience Accessors
 
 extension Power {
-    /// ワット単位で値を取得
     @inlinable
     public var watts: Double {
         value(in: .watts)
     }
 
-    /// ミリワット単位で値を取得
     @inlinable
     public var milliwatts: Double {
         value(in: .milliwatts)
     }
 
-    /// キロワット単位で値を取得
     @inlinable
     public var kilowatts: Double {
         value(in: .kilowatts)
     }
 
-    /// メガワット単位で値を取得
     @inlinable
     public var megawatts: Double {
         value(in: .megawatts)
     }
 
-    /// ギガワット単位で値を取得
     @inlinable
     public var gigawatts: Double {
         value(in: .gigawatts)
     }
 
-    /// 馬力（メトリック）単位で値を取得
+    /// The value in metric horsepower, not imperial.
+    ///
+    /// There is no matching accessor for the imperial unit; use
+    /// `value(in: .horsepowerImperial)` for that one.
     @inlinable
     public var horsepower: Double {
         value(in: .horsepower)
@@ -161,7 +166,10 @@ extension Power {
 // MARK: - Power Formatting
 
 extension Power {
-    /// 適切な単位で自動フォーマット
+    /// The value in the largest metric multiple that fits: GW from 10⁹ W, then MW, kW, W, and mW below 1 W.
+    ///
+    /// W prints with one decimal, every other unit with two. Horsepower is never chosen, so a
+    /// value entered in hp comes back out in watts.
     public var formatted: String {
         let w = watts
         if abs(w) >= 1e9 {

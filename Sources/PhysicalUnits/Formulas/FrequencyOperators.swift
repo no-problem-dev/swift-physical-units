@@ -1,18 +1,33 @@
 import Foundation
 
 // MARK: - Frequency Operators
-// 周波数と時間の関係を演算子として実装
+// The relations between frequency, period, angle and angular speed, written as operators.
 //
-// 周波数 = 1 / 周期       (f = 1 / T)
-// 周期 = 1 / 周波数       (T = 1 / f)
-// 角周波数 = 2π × 周波数  (ω = 2πf) - Angle 演算で対応
+// Frequency      = 1 / period      (f = 1 / T)
+// Period         = 1 / frequency   (T = 1 / f)
+// Angular speed  = 2π × frequency  (ω = 2πf) - handled through the Angle operations
+//
+// The 2π that runs through this file is the definition of a revolution (1 cycle = 2π rad),
+// not a measured quantity, so it is exact as a definition; the code spells it `2.0 * .pi`,
+// which means the only error is `Double`'s representation of π. Nothing here is a rounded
+// decimal literal, and neither is the rpm unit the examples use — its factor is written
+// `2.0 * .pi / 60.0`, with the minute being exactly 60 s.
+//
+// Radians count as dimensionless throughout, which is what lets rad/s divide out against
+// seconds and metres. The consequence is that the type checker cannot tell rad/s from a
+// plain 1/s, so `Speed / Length` yielding an `AngularSpeed` is a convention this file
+// chooses, not something the dimensions prove.
 
 // MARK: - Frequency ↔ Duration Conversion Extensions
 
 extension Duration {
-    /// 周期から周波数へ変換
+    /// This duration read as a period, converted to the frequency it repeats at.
     ///
     /// f = 1 / T
+    ///
+    /// The reciprocal of the value in seconds, with no conversion factor involved. A zero
+    /// duration produces an infinite frequency rather than trapping, because this is
+    /// `Double` division.
     ///
     /// ```swift
     /// let period = Duration(0.001, unit: .seconds)  // 1 ms
@@ -27,9 +42,12 @@ extension Duration {
 }
 
 extension Frequency {
-    /// 周波数から周期へ変換
+    /// The duration of one cycle at this frequency.
     ///
     /// T = 1 / f
+    ///
+    /// The reciprocal of the value in hertz. A zero frequency produces an infinite period
+    /// rather than trapping.
     ///
     /// ```swift
     /// let frequency = Frequency(1000, unit: .hertz)  // 1 kHz
@@ -45,9 +63,13 @@ extension Frequency {
 
 // MARK: - Angle = Frequency × Time (rad = Hz × s × 2π)
 
-/// 周波数 × 時間 = 角度（rad）
+/// Multiplies a frequency by an elapsed time to give the phase swept out.
 ///
 /// θ = 2π × f × t
+///
+/// The cycles completed in that time, turned into an angle at 2π rad per cycle. The result
+/// accumulates without limit — ten cycles give 20π rad, not zero — so wrap it yourself if
+/// you want a phase within one turn.
 ///
 /// ```swift
 /// let frequency = Frequency(1, unit: .hertz)  // 1 Hz
@@ -62,7 +84,7 @@ public func * (frequency: Frequency, time: Duration) -> Angle {
     return Angle(baseValue: cycles * 2.0 * .pi)
 }
 
-/// 時間 × 周波数 = 角度（可換）
+/// The commutative form of θ = 2π × f × t, with the operands in the other order.
 @inlinable
 public func * (time: Duration, frequency: Frequency) -> Angle {
     frequency * time
@@ -71,7 +93,10 @@ public func * (time: Duration, frequency: Frequency) -> Angle {
 // MARK: - Cycles (dimensionless) from Frequency × Time
 
 extension Frequency {
-    /// 指定時間内のサイクル数を計算
+    /// The number of cycles completed in the given time.
+    ///
+    /// A count is dimensionless, so this returns a bare `Double` and the result carries no
+    /// dimension onward. Fractional cycles are kept rather than truncated.
     ///
     /// ```swift
     /// let frequency = Frequency(60, unit: .hertz)
@@ -87,9 +112,13 @@ extension Frequency {
 // MARK: - Angular Speed Extensions
 
 extension Frequency {
-    /// 角周波数（rad/s）を取得
+    /// This frequency as an angular speed in rad/s, as a plain number.
     ///
     /// ω = 2πf
+    ///
+    /// Returning `Double` drops the dimension, so nothing downstream will catch a rad/s value
+    /// used where something else was meant. Prefer `asAngularSpeed`, which returns a typed
+    /// `AngularSpeed` from the same arithmetic.
     ///
     /// ```swift
     /// let frequency = Frequency(1, unit: .hertz)
@@ -107,7 +136,7 @@ extension Frequency {
 
 // MARK: - AngularSpeed = Angle / Time
 
-/// 角度 / 時間 = 角速度
+/// Divides an angle by the time taken to sweep it, giving the average angular speed.
 ///
 /// ω = θ / t
 ///
@@ -125,9 +154,11 @@ public func / (angle: Angle, time: Duration) -> AngularSpeed {
 
 // MARK: - Angle = AngularSpeed × Time
 
-/// 角速度 × 時間 = 角度
+/// Multiplies an angular speed by a duration to give the angle swept.
 ///
 /// θ = ω × t
+///
+/// Assumes a constant rate, and the angle accumulates past a full turn rather than wrapping.
 ///
 /// ```swift
 /// let angularSpeed = AngularSpeed(100, unit: .rpm)
@@ -141,7 +172,7 @@ public func * (angularSpeed: AngularSpeed, time: Duration) -> Angle {
     Angle(baseValue: angularSpeed.baseValue * time.baseValue)
 }
 
-/// 時間 × 角速度 = 角度（可換）
+/// The commutative form of θ = ω × t, with the operands in the other order.
 @inlinable
 public func * (time: Duration, angularSpeed: AngularSpeed) -> Angle {
     angularSpeed * time
@@ -149,7 +180,7 @@ public func * (time: Duration, angularSpeed: AngularSpeed) -> Angle {
 
 // MARK: - Time = Angle / AngularSpeed
 
-/// 角度 / 角速度 = 時間
+/// Divides an angle by an angular speed to give how long that rotation takes.
 ///
 /// t = θ / ω
 ///
@@ -167,9 +198,13 @@ public func / (angle: Angle, angularSpeed: AngularSpeed) -> Duration {
 
 // MARK: - Linear Speed = AngularSpeed × Radius
 
-/// 角速度 × 半径 = 線速度
+/// Multiplies an angular speed by a radius to give the tangential speed at that radius.
 ///
 /// v = ω × r
+///
+/// Holds only because radians are dimensionless: rad/s × m falls out as m/s. The length
+/// operand has to be a radius from the axis — nothing in the types enforces that, so a
+/// diameter passed by mistake type-checks and silently doubles the answer.
 ///
 /// ```swift
 /// let angularSpeed = AngularSpeed(100, unit: .rpm)
@@ -183,7 +218,7 @@ public func * (angularSpeed: AngularSpeed, radius: Length) -> Speed {
     Speed(baseValue: angularSpeed.baseValue * radius.baseValue)
 }
 
-/// 半径 × 角速度 = 線速度（可換）
+/// The commutative form of v = ω × r, with the operands in the other order.
 @inlinable
 public func * (radius: Length, angularSpeed: AngularSpeed) -> Speed {
     angularSpeed * radius
@@ -191,9 +226,13 @@ public func * (radius: Length, angularSpeed: AngularSpeed) -> Speed {
 
 // MARK: - AngularSpeed = Speed / Radius
 
-/// 線速度 / 半径 = 角速度
+/// Divides a tangential speed by the radius it was measured at to give the angular speed.
 ///
 /// ω = v / r
+///
+/// m/s ÷ m leaves 1/s, which is read back as rad/s because radians are dimensionless. That
+/// step is a convention, not a proof: the same division would equally describe a frequency,
+/// and the type system cannot tell you which one you meant.
 ///
 /// ```swift
 /// let speed = Speed(10, unit: .metersPerSecond)
@@ -209,7 +248,7 @@ public func / (speed: Speed, radius: Length) -> AngularSpeed {
 
 // MARK: - Radius = Speed / AngularSpeed
 
-/// 線速度 / 角速度 = 半径
+/// Divides a tangential speed by an angular speed to give the radius they imply.
 ///
 /// r = v / ω
 ///
@@ -228,9 +267,12 @@ public func / (speed: Speed, angularSpeed: AngularSpeed) -> Length {
 // MARK: - AngularSpeed ↔ Frequency Conversion
 
 extension AngularSpeed {
-    /// 周波数から角速度を計算
+    /// Creates an angular speed from a frequency.
     ///
     /// ω = 2πf
+    ///
+    /// One cycle is 2π rad by definition, so the factor is exact as a definition and the
+    /// only loss is `Double`'s π.
     ///
     /// ```swift
     /// let frequency = Frequency(60, unit: .hertz)
@@ -241,7 +283,7 @@ extension AngularSpeed {
         self = AngularSpeed(baseValue: frequency.baseValue * 2.0 * .pi)
     }
 
-    /// 周波数として取得
+    /// This angular speed expressed as a cycle rate.
     ///
     /// f = ω / 2π
     @inlinable
@@ -251,7 +293,7 @@ extension AngularSpeed {
 }
 
 extension Frequency {
-    /// 角速度から周波数を計算
+    /// Creates a frequency from an angular speed.
     ///
     /// f = ω / 2π
     ///
@@ -264,7 +306,7 @@ extension Frequency {
         self = Frequency(baseValue: angularSpeed.baseValue / (2.0 * .pi))
     }
 
-    /// 角速度として取得
+    /// This frequency expressed as an angular speed, keeping the dimension.
     ///
     /// ω = 2πf
     @inlinable

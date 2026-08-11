@@ -1,21 +1,20 @@
 import Foundation
 
-/// アンペア - 電流の SI 基本単位
+/// The ampere (A), the SI base unit of electric current, as a base unit for metric prefixes.
 ///
-/// 電流の大きさを表す SI 基本単位。
-/// 2019 年の SI 再定義により、電気素量 e の値を固定して定義される。
+/// Since the 2019 redefinition the ampere is fixed by the elementary charge, taken to be
+/// exactly 1.602176634 × 10⁻¹⁹ C: one ampere is a flow of 1/e elementary charges per second.
+/// The older two-parallel-wires definition, which depended on a measured force, is gone.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Ampere>(.milli)  // ミリアンペア
+/// let unit = MetricUnit<Ampere>(.milli)  // milliamperes
 /// print(unit.symbol)  // "mA"
 /// ```
 @frozen
 public struct Ampere: BaseUnit {
-    /// 単位記号
     public static let symbol = "A"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

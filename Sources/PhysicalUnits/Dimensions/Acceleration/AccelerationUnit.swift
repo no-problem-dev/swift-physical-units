@@ -1,16 +1,17 @@
 import Foundation
 
-/// 加速度の単位
+/// A unit of acceleration, convertible to and from metres per second squared.
 ///
-/// 加速度は SI 導出単位で、メートル毎秒毎秒 (m/s²) が基本単位。
-/// a = Δv / Δt （速度の時間変化率）
+/// The base unit is m/s², the rate at which speed changes (a = Δv / Δt).
 ///
-/// ## 変換関係
-/// - 1 m/s² = 基準単位
-/// - 1 g (標準重力加速度) ≈ 9.80665 m/s²
-/// - 1 Gal (ガル) = 0.01 m/s² = 1 cm/s²（地震学で使用）
+/// ## Conversions
+/// - 1 g = 9.80665 m/s², exact. Standard gravity is a defined constant, so it does not vary
+///   with latitude or altitude the way locally measured gravity does.
+/// - 1 Gal = 0.01 m/s² = 1 cm/s², exact by definition of the CGS system. Used in geodesy and
+///   seismology.
+/// - 1 mGal = 10⁻⁵ m/s², exact.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let gravity = Acceleration(1, unit: .standardGravity)
 /// print(gravity.metersPerSecondSquared)  // 9.80665
@@ -20,29 +21,32 @@ import Foundation
 /// ```
 @frozen
 public enum AccelerationUnit: Unit, Codable, Sendable, Hashable {
-    /// メートル毎秒毎秒 (m/s²) - SI 導出単位
+    /// Metre per second squared (m/s²), the base unit every other case converts against.
     case metersPerSecondSquared
 
-    /// 標準重力加速度 (g)
+    /// Standard gravity (g), exactly 9.80665 m/s².
     case standardGravity
 
-    /// ガル (Gal) = cm/s²（地震学で使用）
+    /// Gal, the CGS unit used in seismology and gravimetry: exactly 0.01 m/s² = 1 cm/s².
     case gal
 
-    /// ミリガル (mGal)
+    /// Milligal (mGal), exactly 10⁻⁵ m/s².
     case milligal
 
     // MARK: - Constants
 
-    /// 標準重力加速度 (m/s²)
+    /// Standard gravity g₀ in m/s², exactly 9.80665 by definition.
+    ///
+    /// A conventional value fixed by agreement, not a measurement of gravity anywhere in
+    /// particular. `ForceUnit.standardGravity` holds an independent copy of the same number.
     public static let standardGravityValue: Double = 9.80665
 
-    /// ガル → m/s² 変換係数
+    /// Gal in m/s², exactly 0.01 by definition.
     public static let galToMsSquared: Double = 0.01
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（m/s²）への変換係数
+    /// The multiplier that turns a value in this unit into m/s².
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -57,7 +61,6 @@ public enum AccelerationUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
     public var symbol: String {
         switch self {
         case .metersPerSecondSquared:
@@ -82,12 +85,9 @@ extension AccelerationUnit: CustomStringConvertible {
 
 // MARK: - Acceleration Type Alias
 
-/// 加速度
+/// An acceleration, stored internally in m/s².
 ///
-/// `Measurement<AccelerationUnit>` の型エイリアス。
-/// 加速度を型安全に表現する。
-///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let freefall = Acceleration(1, unit: .standardGravity)
 /// print(freefall.metersPerSecondSquared)  // 9.80665
@@ -100,25 +100,21 @@ public typealias Acceleration = Measurement<AccelerationUnit>
 // MARK: - Acceleration Convenience Accessors
 
 extension Acceleration {
-    /// メートル毎秒毎秒単位で値を取得
     @inlinable
     public var metersPerSecondSquared: Double {
         value(in: .metersPerSecondSquared)
     }
 
-    /// 標準重力加速度単位で値を取得
     @inlinable
     public var standardGravity: Double {
         value(in: .standardGravity)
     }
 
-    /// ガル単位で値を取得
     @inlinable
     public var gal: Double {
         value(in: .gal)
     }
 
-    /// ミリガル単位で値を取得
     @inlinable
     public var milligal: Double {
         value(in: .milligal)
@@ -128,7 +124,11 @@ extension Acceleration {
 // MARK: - Acceleration Formatting
 
 extension Acceleration {
-    /// 適切な単位で自動フォーマット
+    /// The value as g from 1 g upward, as m/s² down to 0.01 m/s², and as mGal below that.
+    ///
+    /// The Gal branch below never runs: `abs(gal) >= 1` is the same condition as
+    /// `abs(metersPerSecondSquared) >= 0.01`, which the preceding branch has already taken.
+    /// This property therefore never prints `Gal`.
     public var formatted: String {
         let ms2 = metersPerSecondSquared
         if abs(ms2) >= AccelerationUnit.standardGravityValue {
@@ -146,15 +146,15 @@ extension Acceleration {
 // MARK: - Acceleration Special Values
 
 extension Acceleration {
-    /// 標準重力加速度（海面上）
+    /// Standard gravity at sea level: 1 g, exactly 9.80665 m/s².
     public static let gravity = Acceleration(1, unit: .standardGravity)
 
-    /// 月面重力加速度（約 1.62 m/s²）
+    /// Mean surface gravity of the Moon, 1.62 m/s² — a rounded measured value, not a defined one.
     public static let moonGravity = Acceleration(1.62, unit: .metersPerSecondSquared)
 
-    /// 火星表面重力加速度（約 3.72 m/s²）
+    /// Mean surface gravity of Mars, 3.72 m/s² — a rounded measured value, not a defined one.
     public static let marsGravity = Acceleration(3.72, unit: .metersPerSecondSquared)
 
-    /// ゼロ加速度
+    /// Zero acceleration. Shadows the `AdditiveArithmetic` zero for this dimension with the same value.
     public static let zero = Acceleration(0, unit: .metersPerSecondSquared)
 }

@@ -1,21 +1,25 @@
 import Foundation
 
-/// グラム - 質量の基本単位
+/// The gram (g), this library's base unit of mass, as a base unit for metric prefixes.
 ///
-/// SI 基本単位としてはキログラム (kg) が定義されているが、
-/// 歴史的経緯により接頭辞なしのグラムを基本単位として扱う。
+/// The SI base unit of mass is the kilogram, which is the one SI base unit that already
+/// carries a prefix. A prefix has to attach to something unprefixed, so prefixes attach to the
+/// gram here and `MetricUnit<Gram>(.kilo)` is how the kilogram is spelled.
 ///
-/// ## 使用例
+/// - Important: `Mass` therefore stores grams, not kilograms. Units defined on the kilogram —
+///   the newton, and the joule through it — are a factor of 1000 away. The typed
+///   `Mass` × `Acceleration` and `Force` / `Mass` operators apply that factor; arithmetic done
+///   on raw `Double` values does not.
+///
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Gram>(.kilo)  // キログラム
+/// let unit = MetricUnit<Gram>(.kilo)  // kilograms
 /// print(unit.symbol)  // "kg"
 /// ```
 @frozen
 public struct Gram: BaseUnit {
-    /// 単位記号
     public static let symbol = "g"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

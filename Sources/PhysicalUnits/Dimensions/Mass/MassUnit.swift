@@ -1,53 +1,68 @@
 import Foundation
 
-/// 質量の単位
+/// A unit of mass: an SI prefix applied to the gram.
 ///
-/// `MetricUnit<Gram>` の型エイリアス。
-/// 接頭辞を変えることで、グラム、キログラム、ミリグラムなどを表現できる。
+/// The base unit is the **gram**, not the SI kilogram — a prefix has to attach to an unprefixed
+/// unit. So `Mass` stores grams, `.kilograms` has a coefficient of 1000, and crossing into the
+/// kilogram-based newton costs a factor of 1000 that the typed `Mass` × `Acceleration` and
+/// `Force` / `Mass` operators apply for you.
+///
+/// Every case is a power of ten away from the gram, so every conversion here is exact by
+/// definition. There are no avoirdupois units: no pounds, ounces or short tons, and none of
+/// their conversion factors. The factors are `Double`s, though, and only the non-negative
+/// powers of ten are exactly representable: `kilo` and `mega` scale exactly, while `milli`,
+/// `micro` and `nano` multiply by a rounded factor.
+///
+/// Six prefixes get a shorthand below — `megagrams` and `tonnes` are two names for the same
+/// one. ``MetricPrefix`` has fifteen cases in all, from `femto` (10⁻¹⁵) to `peta` (10¹⁵), and
+/// any of them can be passed directly: `MassUnit(.deca)`.
 public typealias MassUnit = MetricUnit<Gram>
 
 // MARK: - Convenience Static Properties
 
 extension MassUnit {
-    /// グラム (g)
     @inlinable
     public static var grams: MassUnit {
         MassUnit(.base)
     }
 
-    /// キログラム (kg)
     @inlinable
     public static var kilograms: MassUnit {
         MassUnit(.kilo)
     }
 
-    /// ミリグラム (mg)
     @inlinable
     public static var milligrams: MassUnit {
         MassUnit(.milli)
     }
 
-    /// マイクログラム (μg)
     @inlinable
     public static var micrograms: MassUnit {
         MassUnit(.micro)
     }
 
-    /// ナノグラム (ng)
+    /// Nanogram (ng), exactly 10⁻⁹ g.
+    ///
+    /// `Mass` has no matching accessor, so read a value back with `value(in: .nanograms)`.
     @inlinable
     public static var nanograms: MassUnit {
         MassUnit(.nano)
     }
 
-    /// メガグラム (Mg) = トン
+    /// Megagram (Mg), exactly 10⁶ g.
+    ///
+    /// The same unit as ``tonnes``, spelled the SI way. Its symbol is `Mg`, not `t`; nothing in
+    /// this package prints `t` except `Mass.formatted`.
     @inlinable
     public static var megagrams: MassUnit {
         MassUnit(.mega)
     }
 
-    /// トン (t) = メガグラム
+    /// Tonne (t), the metric ton: exactly 1000 kg.
     ///
-    /// SI では「トン」は「メガグラム」と同義。
+    /// ``megagrams`` under its everyday name — the same prefix, so the two are interchangeable.
+    /// This is not the US short ton (907.18474 kg) or the imperial long ton (1016.0469088 kg);
+    /// neither of those has a unit here.
     @inlinable
     public static var tonnes: MassUnit {
         MassUnit(.mega)
@@ -56,12 +71,14 @@ extension MassUnit {
 
 // MARK: - Mass Type Alias
 
-/// 質量
+/// A mass, stored internally in grams.
 ///
-/// `Measurement<MassUnit>` の型エイリアス。
-/// 質量を型安全に表現する。
+/// - Important: Grams, not kilograms. `Force` is kilogram-based, so the `Mass` × `Acceleration`
+///   and `Force` / `Mass` operators divide and multiply by 1000 on the way across — an exact
+///   factor, since the SI kilo prefix is exactly 10³. Reaching past those operators into plain
+///   `Double` arithmetic skips the bridge and comes out a factor of 1000 wrong.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let weight = Mass(70, unit: .kilograms)
 /// print(weight.grams)  // 70000.0
@@ -74,31 +91,27 @@ public typealias Mass = Measurement<MassUnit>
 // MARK: - Mass Convenience Accessors
 
 extension Mass {
-    /// グラム単位で値を取得
     @inlinable
     public var grams: Double {
         value(in: .grams)
     }
 
-    /// キログラム単位で値を取得
     @inlinable
     public var kilograms: Double {
         value(in: .kilograms)
     }
 
-    /// ミリグラム単位で値を取得
     @inlinable
     public var milligrams: Double {
         value(in: .milligrams)
     }
 
-    /// マイクログラム単位で値を取得
     @inlinable
     public var micrograms: Double {
         value(in: .micrograms)
     }
 
-    /// トン単位で値を取得
+    /// The value in metric tonnes, which is also the value in megagrams.
     @inlinable
     public var tonnes: Double {
         value(in: .tonnes)
@@ -108,9 +121,11 @@ extension Mass {
 // MARK: - Mass CustomStringConvertible
 
 extension Mass {
-    /// 適切な単位で自動フォーマット
+    /// The value in the largest metric multiple that fits: t from 1000 kg, then kg, g, mg, and μg below 1 mg.
     ///
-    /// 値の大きさに応じて適切な単位を自動選択。
+    /// Always two decimals, and the threshold is read in kilograms rather than in the stored
+    /// grams. Nanograms are never chosen, so anything below a microgram prints as a fraction of
+    /// one and zero prints as `0.00 μg`.
     public var formatted: String {
         let kg = kilograms
         if abs(kg) >= 1000 {

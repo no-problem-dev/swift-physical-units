@@ -1,20 +1,21 @@
 import Foundation
 
-/// オーム - 電気抵抗の SI 導出単位
+/// The ohm (Ω), the SI derived unit of electrical resistance, as a base unit for metric prefixes.
 ///
-/// 1 Ω = 1 V/A = 1 kg⋅m²⋅s⁻³⋅A⁻²
+/// 1 Ω = 1 V/A = 1 kg⋅m²⋅s⁻³⋅A⁻², coherent and so free of any conversion factor.
 ///
-/// ## 使用例
+/// - Note: The symbol is the Greek capital letter omega (U+03A9), not the deprecated ohm sign
+///   (U+2126), which matters when comparing symbols byte for byte.
+///
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Ohm>(.kilo)  // キロオーム
+/// let unit = MetricUnit<Ohm>(.kilo)  // kilohms
 /// print(unit.symbol)  // "kΩ"
 /// ```
 @frozen
 public struct Ohm: BaseUnit {
-    /// 単位記号
     public static let symbol = "Ω"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

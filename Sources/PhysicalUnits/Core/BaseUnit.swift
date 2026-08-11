@@ -1,19 +1,15 @@
 import Foundation
 
-/// 基本単位プロトコル
+/// The unprefixed unit that an SI prefix attaches to.
 ///
-/// SI 基本単位や派生単位の「基本形」を表す。
-/// `MetricUnit<Base>` と組み合わせることで、接頭辞付きの単位を生成できる。
+/// `Gram`, `Meter`, and `Second` are base units; combining one with a ``MetricPrefix``
+/// through ``MetricUnit`` produces kilogram (kilo + gram), centimeter (centi + meter), and
+/// so on.
 ///
-/// ## 概念
-/// - `Gram`: 質量の基本単位
-/// - `Meter`: 長さの基本単位
-/// - `Second`: 時間の基本単位
+/// A conformer is a phantom type. It carries no stored properties and is only ever read
+/// statically, through ``symbol``, so `MetricUnit<Gram>` stores the prefix and nothing else.
 ///
-/// これらに `MetricPrefix` を組み合わせることで、
-/// キログラム (kilo + gram)、センチメートル (centi + meter) などを表現する。
-///
-/// ## 実装例
+/// ## Conforming
 /// ```swift
 /// public struct Gram: BaseUnit {
 ///     public static let symbol = "g"
@@ -21,14 +17,14 @@ import Foundation
 /// }
 /// ```
 public protocol BaseUnit: Sendable, Hashable {
-    /// 基本単位の記号
+    /// The symbol of the unprefixed unit, such as `g`, `m`, or `s`.
     ///
-    /// 例: "g" (グラム), "m" (メートル), "s" (秒)
+    /// ``MetricUnit`` builds its own symbol by putting the prefix symbol in front of this one.
     static var symbol: String { get }
 
-    /// デフォルトイニシャライザ
+    /// Creates a value of the base unit, which nothing in this package ever does.
     ///
-    /// `BaseUnit` は phantom type として使用されるため、
-    /// インスタンス化は必須ではないが、型の一貫性のために必要。
+    /// Base units are used as phantom types, so a conformer still has to write
+    /// `public init() {}` even though no instance is created.
     init()
 }

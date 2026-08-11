@@ -1,20 +1,21 @@
 import Foundation
 
-/// クーロン - 電荷の SI 基本単位
+/// The coulomb, the SI unit of electric charge.
 ///
-/// 1 C = 1 A × 1 s
+/// 1 C = 1 A × 1 s, exactly. The coulomb is a derived unit — the ampere is the SI base unit for
+/// electricity — so charge computed from a current and a duration converts without rounding.
+/// Since the 2019 SI redefinition the elementary charge is fixed at exactly
+/// 1.602176634 × 10⁻¹⁹ C, which is the value `Charge.elementaryCharge` holds.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Coulomb>(.milli)  // ミリクーロン
+/// let unit = MetricUnit<Coulomb>(.milli)  // millicoulombs
 /// print(unit.symbol)  // "mC"
 /// ```
 @frozen
 public struct Coulomb: BaseUnit {
-    /// 単位記号
     public static let symbol = "C"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

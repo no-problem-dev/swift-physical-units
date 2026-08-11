@@ -1,18 +1,18 @@
 import Foundation
 
-/// 圧力の単位
+/// A pressure unit, with the pascal as the base.
 ///
-/// 圧力は SI 導出単位で、パスカル (Pa) が基本単位。
 /// 1 Pa = 1 N/m² = 1 kg⋅m⁻¹⋅s⁻²
 ///
-/// ## 変換関係
-/// - 1 hPa = 100 Pa（気象で使用）
-/// - 1 bar = 100,000 Pa
-/// - 1 atm = 101,325 Pa（標準大気圧）
-/// - 1 torr ≈ 133.322 Pa（mmHg）
-/// - 1 psi ≈ 6,894.76 Pa
+/// ## Which conversions are exact
+/// - 1 hPa = 100 Pa and 1 mbar = 100 Pa — exact, by the SI prefixes
+/// - 1 bar = 100,000 Pa — exact, that is the definition of the bar
+/// - 1 atm = 101,325 Pa — exact, that is the definition of the standard atmosphere
+/// - 1 Torr = 101325/760 Pa ≈ 133.322368 Pa — an exact ratio, stored rounded
+/// - 1 psi ≈ 6,894.757293 Pa — derived from exactly defined units, but the quotient does not
+///   terminate, so the stored factor is rounded
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let tire = Pressure(2.5, unit: .bars)
 /// print(tire.kilopascals)  // 250.0
@@ -22,50 +22,67 @@ import Foundation
 /// ```
 @frozen
 public enum PressureUnit: Unit, Codable, Sendable, Hashable {
-    /// パスカル (Pa) - SI 導出単位
+    /// Pascals (Pa), the SI derived unit and the base every value is stored in.
     case pascals
 
-    /// ヘクトパスカル (hPa) - 気象で使用
+    /// Hectopascals (hPa), the unit weather reports use for atmospheric pressure.
     case hectopascals
 
-    /// キロパスカル (kPa)
     case kilopascals
 
-    /// メガパスカル (MPa)
     case megapascals
 
-    /// バール (bar)
+    /// Bars, defined as exactly 100,000 Pa.
     case bars
 
-    /// ミリバール (mbar) = ヘクトパスカル
+    /// Millibars (mbar), numerically identical to hectopascals.
     case millibars
 
-    /// 気圧 (atm) - 標準大気圧
+    /// Standard atmospheres (atm), defined as exactly 101,325 Pa.
     case atmospheres
 
-    /// トル (Torr) - 水銀柱ミリメートル
+    /// Torr, defined as exactly 1/760 of a standard atmosphere.
+    ///
+    /// Commonly written "mmHg", but the two are not the same unit: the conventional millimetre
+    /// of mercury is 133.322387415 Pa (mercury at 13,595.1 kg/m³ under standard gravity), about
+    /// 1.4 parts in 10⁷ larger than the torr. That gap is far below clinical or meteorological
+    /// resolution, so a blood-pressure or barometer reading in mmHg can be passed here.
     case torr
 
-    /// ポンド毎平方インチ (psi)
+    /// Pounds-force per square inch (psi).
+    ///
+    /// Built from exactly defined quantities — 1 lbf = 0.45359237 kg × 9.80665 m/s², 1 in =
+    /// 25.4 mm — whose quotient is not a terminating decimal, so the factor is rounded.
     case psi
 
     // MARK: - Constants
 
-    /// バール → パスカル 変換係数
+    /// Pascals per bar, exactly 100,000 by the definition of the bar.
     public static let barToPascals: Double = 1e5
 
-    /// 標準大気圧（パスカル）
+    /// Pascals in one standard atmosphere, exactly 101,325 by definition.
     public static let atmospherePascals: Double = 101_325.0
 
-    /// トル → パスカル 変換係数
+    /// Pascals per torr, rounded from the exact ratio 101325/760.
+    ///
+    /// The exact value runs 133.32236842105263…; this literal keeps 11 significant digits, so
+    /// conversions carry a relative error near 1e-10 — negligible next to the difference between
+    /// the torr and the millimetre of mercury it is usually standing in for.
     public static let torrToPascals: Double = 133.32236842
 
-    /// psi → パスカル 変換係数
+    /// Pascals per psi, rounded from a quotient that does not terminate.
+    ///
+    /// 1 lbf ÷ 1 in² = 4.4482216152605 N ÷ 0.00064516 m² = 6894.75729316836… Pa. Both operands
+    /// are exact by definition, but the result is not, so this literal keeps 13 significant
+    /// digits.
     public static let psiToPascals: Double = 6894.757293168
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（パスカル）への変換係数
+    /// Pascals per one of this unit.
+    ///
+    /// Exact for the SI multiples, the bar, and the atmosphere; rounded for torr and psi, whose
+    /// constants document how far.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -90,7 +107,6 @@ public enum PressureUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
     public var symbol: String {
         switch self {
         case .pascals:
@@ -125,73 +141,61 @@ extension PressureUnit: CustomStringConvertible {
 
 // MARK: - Pressure Type Alias
 
-/// 圧力
+/// A pressure value, stored in pascals whichever unit it was written in.
 ///
-/// `Measurement<PressureUnit>` の型エイリアス。
-/// 圧力を型安全に表現する。
-///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let blood = Pressure(120, unit: .torr)
-/// print(blood.kilopascals)  // 16.0
+/// print(blood.kilopascals)  // ≈15.9987
 ///
 /// let vacuum = Pressure(0.001, unit: .pascals)
-/// print(vacuum.torr)        // 7.5e-6
+/// print(vacuum.torr)        // ≈7.5006e-06
 /// ```
 public typealias Pressure = Measurement<PressureUnit>
 
 // MARK: - Pressure Convenience Accessors
 
 extension Pressure {
-    /// パスカル単位で値を取得
     @inlinable
     public var pascals: Double {
         value(in: .pascals)
     }
 
-    /// ヘクトパスカル単位で値を取得
     @inlinable
     public var hectopascals: Double {
         value(in: .hectopascals)
     }
 
-    /// キロパスカル単位で値を取得
     @inlinable
     public var kilopascals: Double {
         value(in: .kilopascals)
     }
 
-    /// メガパスカル単位で値を取得
     @inlinable
     public var megapascals: Double {
         value(in: .megapascals)
     }
 
-    /// バール単位で値を取得
     @inlinable
     public var bars: Double {
         value(in: .bars)
     }
 
-    /// ミリバール単位で値を取得
     @inlinable
     public var millibars: Double {
         value(in: .millibars)
     }
 
-    /// 気圧単位で値を取得
     @inlinable
     public var atmospheres: Double {
         value(in: .atmospheres)
     }
 
-    /// トル単位で値を取得
     @inlinable
     public var torr: Double {
         value(in: .torr)
     }
 
-    /// psi 単位で値を取得
     @inlinable
     public var psi: Double {
         value(in: .psi)
@@ -201,7 +205,11 @@ extension Pressure {
 // MARK: - Pressure Formatting
 
 extension Pressure {
-    /// 適切な単位で自動フォーマット
+    /// The value rendered with whichever unit keeps it in a readable range.
+    ///
+    /// MPa from 1 MPa up, then bar from 100 kPa, kPa from 1 kPa, hPa from 100 Pa, and Pa below
+    /// that. Note that atmospheric pressure lands in the bar band: 1013 hPa renders as
+    /// "1.01 bar", so weather readings need ``hectopascals`` and their own formatting.
     public var formatted: String {
         let pa = pascals
         if abs(pa) >= 1e6 {
@@ -221,9 +229,9 @@ extension Pressure {
 // MARK: - Pressure Special Values
 
 extension Pressure {
-    /// 標準大気圧
+    /// 1 atm, which is exactly 101,325 Pa.
     public static let standardAtmosphere = Pressure(1, unit: .atmospheres)
 
-    /// 真空（理想）
+    /// Exactly zero pressure — an idealization no real vacuum reaches.
     public static let vacuum = Pressure(0, unit: .pascals)
 }

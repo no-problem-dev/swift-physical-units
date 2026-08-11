@@ -1,20 +1,22 @@
 import Foundation
 
-/// ワット - 仕事率・電力の SI 導出単位
+/// The watt (W), the SI derived unit of power, as a base unit for metric prefixes.
 ///
-/// 1 W = 1 J/s = 1 kg⋅m²⋅s⁻³
+/// 1 W = 1 J/s = 1 kg⋅m²⋅s⁻³.
 ///
-/// ## 使用例
+/// - Note: This type only feeds `MetricUnit<Watt>`. The `Power` measurement type is built on
+///   the `PowerUnit` enum instead, so `Measurement<MetricUnit<Watt>>` and `Power` are separate
+///   types that do not mix and share no conversions.
+///
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Watt>(.kilo)  // キロワット
+/// let unit = MetricUnit<Watt>(.kilo)  // kilowatts
 /// print(unit.symbol)  // "kW"
 /// ```
 @frozen
 public struct Watt: BaseUnit {
-    /// 単位記号
     public static let symbol = "W"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

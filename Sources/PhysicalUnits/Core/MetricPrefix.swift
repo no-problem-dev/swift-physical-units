@@ -1,11 +1,18 @@
 import Foundation
 
-/// SI接頭辞（メートル法の接頭辞）
+/// An SI prefix, stored as the factor it multiplies the base unit by.
 ///
-/// 基本単位に対する倍率を表現する。
-/// `rawValue` に倍率を直接持つことで、switch による分岐を排除し高速化している。
+/// The raw value *is* the factor, so reading ``factor`` is a load rather than a `switch`.
 ///
-/// ## 使用例
+/// The fifteen cases run from 10¹⁵ (``peta``) down to 10⁻¹⁵ (``femto``): every power of ten
+/// between 10³ and 10⁻³, then every third power out to each end. There is no case for exa,
+/// atto, or anything further out, and none for the binary prefixes such as kibi and mebi.
+///
+/// Scaling multiplies a `Double` by the factor, so it is exact only where the factor itself
+/// is exact. Every power of ten from 10⁰ up to about 10²² is exactly representable, so
+/// ``base`` and all seven positive prefixes scale exactly. The negative ones, ``deci``
+/// through ``femto``, are stored as the nearest `Double` and can leave low bits off.
+///
 /// ```swift
 /// let kilo = MetricPrefix.kilo
 /// print(kilo.factor)   // 1000.0
@@ -13,62 +20,49 @@ import Foundation
 /// ```
 @frozen
 public enum MetricPrefix: Double, Sendable, Hashable, Codable, CaseIterable {
-    /// ペタ (10¹⁵)
     case peta  = 1e15
 
-    /// テラ (10¹²)
     case tera  = 1e12
 
-    /// ギガ (10⁹)
     case giga  = 1e9
 
-    /// メガ (10⁶)
     case mega  = 1e6
 
-    /// キロ (10³)
     case kilo  = 1e3
 
-    /// ヘクト (10²)
     case hecto = 1e2
 
-    /// デカ (10¹)
     case deca  = 1e1
 
-    /// 基本単位 (10⁰)
+    /// The unprefixed unit, a factor of 1.
     case base  = 1
 
-    /// デシ (10⁻¹)
     case deci  = 1e-1
 
-    /// センチ (10⁻²)
     case centi = 1e-2
 
-    /// ミリ (10⁻³)
     case milli = 1e-3
 
-    /// マイクロ (10⁻⁶)
     case micro = 1e-6
 
-    /// ナノ (10⁻⁹)
     case nano  = 1e-9
 
-    /// ピコ (10⁻¹²)
     case pico  = 1e-12
 
-    /// フェムト (10⁻¹⁵)
     case femto = 1e-15
 
     // MARK: - Properties
 
-    /// 基本単位に対する倍率
+    /// The multiplier this prefix applies to the base unit.
     ///
-    /// `rawValue` を直接返すため、分岐なしで O(1) でアクセス可能。
+    /// It is the raw value, so unlike ``symbol`` and ``name`` it costs no branching.
     @inlinable
     public var factor: Double { rawValue }
 
-    /// 接頭辞の記号
+    /// The prefix symbol, or an empty string for ``base``.
     ///
-    /// 例: "k" (キロ), "m" (ミリ), "μ" (マイクロ)
+    /// Micro is the Greek small letter mu (U+03BC), not the micro sign (U+00B5), which
+    /// matters when comparing symbols byte for byte.
     public var symbol: String {
         switch self {
         case .peta:  return "P"
@@ -89,9 +83,7 @@ public enum MetricPrefix: Double, Sendable, Hashable, Codable, CaseIterable {
         }
     }
 
-    /// 接頭辞の名称
-    ///
-    /// 例: "kilo", "milli", "micro"
+    /// The spelled-out prefix name, or an empty string for ``base``.
     public var name: String {
         switch self {
         case .peta:  return "peta"
@@ -112,9 +104,10 @@ public enum MetricPrefix: Double, Sendable, Hashable, Codable, CaseIterable {
         }
     }
 
-    /// 指数表記での倍率
+    /// The base-ten exponent of ``factor``: `3` for kilo, `-3` for milli.
     ///
-    /// 例: kilo = 3 (10³), milli = -3 (10⁻³)
+    /// Unlike ``factor`` this is an exact integer, so it is the safe thing to do arithmetic
+    /// on when combining prefixes.
     public var exponent: Int {
         switch self {
         case .peta:  return 15
@@ -139,6 +132,7 @@ public enum MetricPrefix: Double, Sendable, Hashable, Codable, CaseIterable {
 // MARK: - CustomStringConvertible
 
 extension MetricPrefix: CustomStringConvertible {
+    /// The prefix name, or the literal text `(base)` for ``base``, whose name is empty.
     public var description: String {
         name.isEmpty ? "(base)" : name
     }

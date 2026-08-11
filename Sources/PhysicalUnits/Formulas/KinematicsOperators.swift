@@ -1,14 +1,21 @@
 import Foundation
 
 // MARK: - Kinematics Operators
-// 運動学の基本公式を演算子として実装
+// The basic formulas of constant-speed motion, expressed as operators.
 //
-// 距離 = 速度 × 時間  (d = v × t)
-// 速度 = 距離 / 時間  (v = d / t)
+// distance = speed × time     (d = v × t)
+// speed    = distance / time  (v = d / t)
+//
+// Every operand is already held in its dimension's base unit (m, s, m/s), so each operator
+// multiplies or divides base values straight through: no conversion factor is applied and
+// the units the caller wrote have no effect on the result.
 
 // MARK: - Distance = Speed × Time
 
-/// 速度 × 時間 = 距離
+/// Distance covered at a constant speed, d = v × t.
+///
+/// The product is taken in base units (m/s × s), so the result is a length in meters however
+/// the operands were spelled. For a changing speed this is only the average-speed result.
 ///
 /// ```swift
 /// let speed = Speed(60, unit: .kilometersPerHour)
@@ -22,7 +29,7 @@ public func * (speed: Speed, time: Duration) -> Length {
     Length(baseValue: speed.baseValue * time.baseValue)
 }
 
-/// 時間 × 速度 = 距離（可換）
+/// Commutative form of speed × time, so operand order never matters.
 @inlinable
 public func * (time: Duration, speed: Speed) -> Length {
     speed * time
@@ -30,7 +37,10 @@ public func * (time: Duration, speed: Speed) -> Length {
 
 // MARK: - Speed = Distance / Time
 
-/// 距離 / 時間 = 速度
+/// Average speed over a distance and the time it took, v = d / t.
+///
+/// The division is done in base units (m / s), so the result is a speed in meters per second.
+/// It is the mean over the interval, not the speed at any instant within it.
 ///
 /// ```swift
 /// let distance = Length(100, unit: .kilometers)
@@ -46,7 +56,10 @@ public func / (distance: Length, time: Duration) -> Speed {
 
 // MARK: - Time = Distance / Speed
 
-/// 距離 / 速度 = 時間
+/// Time needed to cover a distance at a constant speed, t = d / v.
+///
+/// The division is done in base units (m / (m/s)), so the result is a duration in seconds.
+/// A zero speed yields infinity rather than a trap, since this is plain `Double` division.
 ///
 /// ```swift
 /// let distance = Length(100, unit: .kilometers)

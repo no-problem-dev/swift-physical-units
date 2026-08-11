@@ -1,39 +1,39 @@
 import Foundation
 
-/// 電圧（電位差）の単位
+/// A unit of voltage, that is of electric potential difference: an SI prefix applied to the volt.
 ///
-/// `MetricUnit<Volt>` の型エイリアス。
-/// 接頭辞を変えることで、ボルト、ミリボルト、キロボルトなどを表現できる。
+/// Every case is a power of ten away from the volt, so every conversion here is exact by
+/// definition. The factors are `Double`s, and only the non-negative powers of ten are exactly
+/// representable: `kilo` and `mega` scale exactly, while `milli` and `micro` multiply by a
+/// rounded factor.
+///
+/// Five prefixes get a shorthand below. ``MetricPrefix`` has fifteen cases in all, from `femto`
+/// (10⁻¹⁵) to `peta` (10¹⁵), and any of them can be passed directly: `VoltageUnit(.nano)`.
 public typealias VoltageUnit = MetricUnit<Volt>
 
 // MARK: - Convenience Static Properties
 
 extension VoltageUnit {
-    /// ボルト (V)
     @inlinable
     public static var volts: VoltageUnit {
         VoltageUnit(.base)
     }
 
-    /// マイクロボルト (μV)
     @inlinable
     public static var microvolts: VoltageUnit {
         VoltageUnit(.micro)
     }
 
-    /// ミリボルト (mV)
     @inlinable
     public static var millivolts: VoltageUnit {
         VoltageUnit(.milli)
     }
 
-    /// キロボルト (kV)
     @inlinable
     public static var kilovolts: VoltageUnit {
         VoltageUnit(.kilo)
     }
 
-    /// メガボルト (MV)
     @inlinable
     public static var megavolts: VoltageUnit {
         VoltageUnit(.mega)
@@ -42,12 +42,13 @@ extension VoltageUnit {
 
 // MARK: - Voltage Type Alias
 
-/// 電圧（電位差）
+/// A voltage, stored internally in volts.
 ///
-/// `Measurement<VoltageUnit>` の型エイリアス。
-/// 電圧を型安全に表現する。
+/// A potential *difference*, so it is signed and adds and subtracts freely — nothing here
+/// carries a reference node, and a value is only meaningful against whatever you took as
+/// ground. For AC the number is whatever you put in, RMS or peak; the type does not know which.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let battery = Voltage(1.5, unit: .volts)
 /// print(battery.millivolts)  // 1500.0
@@ -60,31 +61,26 @@ public typealias Voltage = Measurement<VoltageUnit>
 // MARK: - Voltage Convenience Accessors
 
 extension Voltage {
-    /// ボルト単位で値を取得
     @inlinable
     public var volts: Double {
         value(in: .volts)
     }
 
-    /// マイクロボルト単位で値を取得
     @inlinable
     public var microvolts: Double {
         value(in: .microvolts)
     }
 
-    /// ミリボルト単位で値を取得
     @inlinable
     public var millivolts: Double {
         value(in: .millivolts)
     }
 
-    /// キロボルト単位で値を取得
     @inlinable
     public var kilovolts: Double {
         value(in: .kilovolts)
     }
 
-    /// メガボルト単位で値を取得
     @inlinable
     public var megavolts: Double {
         value(in: .megavolts)
@@ -94,7 +90,9 @@ extension Voltage {
 // MARK: - Voltage Formatting
 
 extension Voltage {
-    /// 適切な単位で自動フォーマット
+    /// The value in the largest metric multiple that fits: MV from 10⁶ V, then kV, V, mV, and μV below 1 mV.
+    ///
+    /// Two decimals down to mV, one for μV. Zero prints as `0.0 μV`.
     public var formatted: String {
         let v = volts
         if abs(v) >= 1e6 {
@@ -114,15 +112,28 @@ extension Voltage {
 // MARK: - Voltage Special Values
 
 extension Voltage {
-    /// USB 電圧（5V）
+    /// The 5 V a USB port carries on VBUS before anything is negotiated.
+    ///
+    /// USB Power Delivery raises it — 9, 15, 20 V and, at extended range, up to 48 V — so this
+    /// is the default, not a ceiling. Nor does it pair with `Current.usbPDMax`: at 5 V the
+    /// standard power profiles stop at 3 A, and 5 A belongs to the higher voltages.
     public static let usb = Voltage(5, unit: .volts)
 
-    /// 家庭用電源（日本: 100V）
+    /// Japanese mains, 100 V nominal RMS.
+    ///
+    /// A nominal figure: the supply is only held near it, and the peak of the waveform is about
+    /// √2 times as large. Japan is also split between 50 Hz and 60 Hz, which a voltage cannot
+    /// express.
     public static let householdJapan = Voltage(100, unit: .volts)
 
-    /// 家庭用電源（米国: 120V）
+    /// US mains, 120 V nominal RMS, measured from either leg to neutral.
+    ///
+    /// The same service supplies 240 V across the two legs, for ranges and dryers.
     public static let householdUS = Voltage(120, unit: .volts)
 
-    /// 家庭用電源（欧州: 230V）
+    /// European mains, 230 V nominal RMS.
+    ///
+    /// The harmonised nominal value, with a tolerance of ±10 % around it, so equipment sees
+    /// anything from 207 V to 253 V.
     public static let householdEU = Voltage(230, unit: .volts)
 }

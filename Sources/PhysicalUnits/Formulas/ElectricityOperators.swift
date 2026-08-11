@@ -1,16 +1,30 @@
 import Foundation
 
 // MARK: - Electricity Operators
-// 電気の基本公式を演算子として実装
+// The basic electrical formulas, written as operators.
 //
-// 電力 = 電圧 × 電流      (P = V × I)
-// 電圧 = 電力 / 電流      (V = P / I)
-// 電流 = 電力 / 電圧      (I = P / V)
-// 電力量 = 電力 × 時間    (E = P × t) - MechanicsOperators で定義済み
+// Power   = voltage × current   (P = V × I)
+// Voltage = power / current     (V = P / I)
+// Current = power / voltage     (I = P / V)
+// Energy  = power × time        (E = P × t) - already defined in MechanicsOperators
+//
+// Every operator here works directly on SI base values (V, A, W, Ω, C, s), so no numeric
+// conversion factor is involved anywhere in this file. The SI electrical units are coherent
+// by definition — 1 W = 1 V·A, 1 Ω = 1 V/A and 1 C = 1 A·s are exact — so the only error is
+// `Double` rounding, not unit conversion.
+//
+// Where compile-time dimension checking stops: these operators are the whole of it. A
+// cross-dimension expression type-checks only for the pairs spelled out in this file and its
+// siblings; there is no general dimensional algebra behind them, so a combination nobody
+// wrote is a compile error rather than a newly derived dimension. Anything that leaves the
+// typed operators also leaves the checking: scalar arithmetic (`Measurement * Double`) keeps
+// whatever dimension the operand had regardless of what the scalar meant, the same-dimension
+// ratio `Measurement / Measurement -> Double` drops the dimension entirely, and a `baseValue`
+// read hands back a bare number that can be fed into any dimension's initializer.
 
 // MARK: - Power = Voltage × Current
 
-/// 電圧 × 電流 = 電力
+/// Multiplies a voltage by a current to give power.
 ///
 /// P = V × I
 ///
@@ -26,7 +40,7 @@ public func * (voltage: Voltage, current: Current) -> Power {
     Power(baseValue: voltage.baseValue * current.baseValue)
 }
 
-/// 電流 × 電圧 = 電力（可換）
+/// The commutative form of P = V × I, with the operands in the other order.
 @inlinable
 public func * (current: Current, voltage: Voltage) -> Power {
     voltage * current
@@ -34,7 +48,7 @@ public func * (current: Current, voltage: Voltage) -> Power {
 
 // MARK: - Voltage = Power / Current
 
-/// 電力 / 電流 = 電圧
+/// Divides power by current to give the voltage across the load.
 ///
 /// V = P / I
 ///
@@ -52,7 +66,7 @@ public func / (power: Power, current: Current) -> Voltage {
 
 // MARK: - Current = Power / Voltage
 
-/// 電力 / 電圧 = 電流
+/// Divides power by voltage to give the current drawn.
 ///
 /// I = P / V
 ///
@@ -74,7 +88,7 @@ public func / (power: Power, voltage: Voltage) -> Current {
 
 // MARK: - Voltage = Current × Resistance
 
-/// 電流 × 抵抗 = 電圧（オームの法則）
+/// Multiplies a current by a resistance to give the voltage drop, by Ohm's law.
 ///
 /// V = I × R
 ///
@@ -90,7 +104,7 @@ public func * (current: Current, resistance: Resistance) -> Voltage {
     Voltage(baseValue: current.baseValue * resistance.baseValue)
 }
 
-/// 抵抗 × 電流 = 電圧（可換）
+/// The commutative form of Ohm's law V = I × R, with the operands in the other order.
 @inlinable
 public func * (resistance: Resistance, current: Current) -> Voltage {
     current * resistance
@@ -98,7 +112,7 @@ public func * (resistance: Resistance, current: Current) -> Voltage {
 
 // MARK: - Current = Voltage / Resistance
 
-/// 電圧 / 抵抗 = 電流
+/// Divides a voltage by a resistance to give the current, by Ohm's law.
 ///
 /// I = V / R
 ///
@@ -116,7 +130,7 @@ public func / (voltage: Voltage, resistance: Resistance) -> Current {
 
 // MARK: - Resistance = Voltage / Current
 
-/// 電圧 / 電流 = 抵抗
+/// Divides a voltage by a current to give the resistance, by Ohm's law.
 ///
 /// R = V / I
 ///
@@ -140,9 +154,12 @@ public func / (voltage: Voltage, current: Current) -> Resistance {
 // Note: These require quadratic operations, implemented as extension methods
 
 extension Power {
-    /// 電流と電力から抵抗を計算
+    /// The resistance that dissipates this power at the given current.
     ///
     /// R = P / I²
+    ///
+    /// This is a method rather than an operator because the current is squared, which the
+    /// typed operators cannot express: there is no `Current × Current` dimension.
     ///
     /// ```swift
     /// let power = Power(10, unit: .watts)
@@ -155,9 +172,12 @@ extension Power {
         Resistance(baseValue: baseValue / (current.baseValue * current.baseValue))
     }
 
-    /// 電圧と電力から抵抗を計算
+    /// The resistance that dissipates this power at the given voltage.
     ///
     /// R = V² / P
+    ///
+    /// Shares the `at:` label with the current-based overload; which relation you get is
+    /// decided by the argument's type, so a bare `Double` will not compile.
     ///
     /// ```swift
     /// let power = Power(100, unit: .watts)
@@ -172,9 +192,11 @@ extension Power {
 }
 
 extension Resistance {
-    /// 電流から消費電力を計算
+    /// The power this resistance dissipates when carrying the given current.
     ///
     /// P = I² × R
+    ///
+    /// The current is squared, so this is a method rather than an operator.
     ///
     /// ```swift
     /// let resistance = Resistance(100, unit: .ohms)
@@ -187,9 +209,12 @@ extension Resistance {
         Power(baseValue: current.baseValue * current.baseValue * baseValue)
     }
 
-    /// 電圧から消費電力を計算
+    /// The power this resistance dissipates with the given voltage across it.
     ///
     /// P = V² / R
+    ///
+    /// Shares the `at:` label with the current-based overload; the argument's type picks
+    /// which of the two relations applies.
     ///
     /// ```swift
     /// let resistance = Resistance(100, unit: .ohms)
@@ -209,9 +234,13 @@ extension Resistance {
 
 // MARK: - Charge = Current × Time
 
-/// 電流 × 時間 = 電荷
+/// Multiplies a current by a duration to give the charge transferred.
 ///
 /// Q = I × t
+///
+/// Assumes the current is constant over the interval; 1 C = 1 A·s exactly, so nothing is
+/// converted. To go the other way from a battery rating, `Charge(ampereHours:)` and
+/// `Charge(milliampereHours:)` are exact too — an hour is exactly 3600 s, so 1 A·h = 3600 C.
 ///
 /// ```swift
 /// let current = Current(2, unit: .amperes)
@@ -225,7 +254,7 @@ public func * (current: Current, time: Duration) -> Charge {
     Charge(baseValue: current.baseValue * time.baseValue)
 }
 
-/// 時間 × 電流 = 電荷（可換）
+/// The commutative form of Q = I × t, with the operands in the other order.
 @inlinable
 public func * (time: Duration, current: Current) -> Charge {
     current * time
@@ -233,9 +262,11 @@ public func * (time: Duration, current: Current) -> Charge {
 
 // MARK: - Current = Charge / Time
 
-/// 電荷 / 時間 = 電流
+/// Divides charge by the duration it moved over to give the average current.
 ///
 /// I = Q / t
+///
+/// The result is the mean over the interval, not an instantaneous value.
 ///
 /// ```swift
 /// let charge = Charge(100, unit: .coulombs)
@@ -251,9 +282,15 @@ public func / (charge: Charge, time: Duration) -> Current {
 
 // MARK: - Time = Charge / Current
 
-/// 電荷 / 電流 = 時間
+/// Divides charge by current to give how long that charge lasts.
 ///
 /// t = Q / I
+///
+/// This is the flat-rate battery discharge estimate: a capacity divided by a steady draw.
+/// Feeding it a capacity from `Charge(ampereHours:)` costs nothing in accuracy, because
+/// 1 A·h = 3600 C exactly — the hour is defined as exactly 3600 s. What it does assume is a
+/// constant current and a battery that delivers its full nameplate capacity, neither of
+/// which real cells honour.
 ///
 /// ```swift
 /// let charge = Charge(100, unit: .coulombs)

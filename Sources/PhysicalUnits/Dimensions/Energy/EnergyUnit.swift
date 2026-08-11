@@ -1,18 +1,18 @@
 import Foundation
 
-/// エネルギーの単位
+/// An energy unit: joules or calories, each with an SI prefix.
 ///
-/// SI 単位（ジュール）と非 SI 単位（カロリー）を統合した単位型。
-/// ジュールを基準単位として、すべてのエネルギー単位を表現する。
+/// Joules are the base. Calories are kept as their own case rather than folded into a joule
+/// count so that a value entered as kcal reads back as kcal.
 ///
-/// ## 設計思想
-/// - **ジュール (J)**: SI 派生単位。1 J = 1 kg⋅m²/s²
-/// - **カロリー (cal)**: 歴史的単位。1 cal = 4.184 J（熱力学カロリー）
+/// ## The two families
+/// - **Joule (J)**: SI derived unit. 1 J = 1 kg⋅m²/s²
+/// - **Calorie (cal)**: historical unit. 1 cal = 4.184 J exactly — the thermochemical calorie
 ///
-/// フィットネスや栄養学ではカロリー（特にキロカロリー）が広く使われるため、
-/// 両方の単位系を統合している。
+/// Nutrition and fitness figures are quoted in kilocalories while physics and engineering use
+/// joules, so both families are carried in one type.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let burned = Energy(300, unit: .kilocalories)
 /// print(burned.kilojoules)  // 1255.2
@@ -22,25 +22,28 @@ import Foundation
 /// ```
 @frozen
 public enum EnergyUnit: Unit, Codable, Sendable, Hashable {
-    /// ジュール（SI 単位）+ 接頭辞
+    /// Joules with an SI prefix.
     case joules(MetricPrefix)
 
-    /// カロリー（非 SI 単位）+ 接頭辞
+    /// Calories with an SI prefix.
     ///
-    /// 熱力学カロリー（1 cal = 4.184 J）を使用。
+    /// The thermochemical calorie, 1 cal = 4.184 J exactly — not the International Steam Table
+    /// calorie (4.1868 J exactly) and not the 15 °C calorie (about 4.1855 J). A figure taken
+    /// from a source on one of those definitions is off by roughly 0.07%.
     case calories(MetricPrefix)
 
     // MARK: - Constants
 
-    /// 1 カロリー = 4.184 ジュール（熱力学カロリー）
+    /// Joules per calorie, exactly 4.184 by the definition of the thermochemical calorie.
     ///
-    /// 注: 国際カロリー（4.1868 J）や 15℃カロリー（4.1855 J）など
-    /// 複数の定義が存在するが、最も一般的な熱力学カロリーを採用。
+    /// Several calories are in circulation — International Steam Table (exactly 4.1868 J),
+    /// 15 °C (about 4.1855 J) — and this package uses the thermochemical one everywhere, so
+    /// values imported from another convention need converting before they are stored.
     public static let joulesPerCalorie: Double = 4.184
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（ジュール）への変換係数
+    /// Joules per one of this unit: the prefix factor alone, times 4.184 for the calorie cases.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -51,7 +54,6 @@ public enum EnergyUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
     public var symbol: String {
         switch self {
         case .joules(let prefix):
@@ -67,25 +69,21 @@ public enum EnergyUnit: Unit, Codable, Sendable, Hashable {
 extension EnergyUnit {
     // MARK: Joules
 
-    /// ジュール (J)
     @inlinable
     public static var joules: EnergyUnit {
         .joules(.base)
     }
 
-    /// キロジュール (kJ)
     @inlinable
     public static var kilojoules: EnergyUnit {
         .joules(.kilo)
     }
 
-    /// メガジュール (MJ)
     @inlinable
     public static var megajoules: EnergyUnit {
         .joules(.mega)
     }
 
-    /// ミリジュール (mJ)
     @inlinable
     public static var millijoules: EnergyUnit {
         .joules(.milli)
@@ -93,22 +91,19 @@ extension EnergyUnit {
 
     // MARK: Calories
 
-    /// カロリー (cal)
     @inlinable
     public static var calories: EnergyUnit {
         .calories(.base)
     }
 
-    /// キロカロリー (kcal)
+    /// Kilocalories (kcal), the unit food labels and fitness trackers call "calories".
     ///
-    /// 栄養学で一般的に使用される単位。
-    /// 「大カロリー」や「食品カロリー」とも呼ばれる。
+    /// 1 kcal = 1000 cal = 4184 J exactly. Also written "large calorie" or "food calorie".
     @inlinable
     public static var kilocalories: EnergyUnit {
         .calories(.kilo)
     }
 
-    /// メガカロリー (Mcal)
     @inlinable
     public static var megacalories: EnergyUnit {
         .calories(.mega)
@@ -125,18 +120,15 @@ extension EnergyUnit: CustomStringConvertible {
 
 // MARK: - Energy Type Alias
 
-/// エネルギー
+/// An energy value, stored in joules whichever unit it was written in.
 ///
-/// `Measurement<EnergyUnit>` の型エイリアス。
-/// エネルギーを型安全に表現する。
-///
-/// ## 使用例
+/// ## Example
 /// ```swift
-/// // 運動で消費したエネルギー
+/// // Energy burned during exercise
 /// let burned = Energy(350, unit: .kilocalories)
 /// print(burned.kilojoules)  // 1464.4
 ///
-/// // 仕事量
+/// // Mechanical work
 /// let work = Energy(500, unit: .joules)
 /// print(work.calories)      // 119.5...
 /// ```
@@ -147,19 +139,16 @@ public typealias Energy = Measurement<EnergyUnit>
 extension Energy {
     // MARK: Joules
 
-    /// ジュール単位で値を取得
     @inlinable
     public var joules: Double {
         value(in: .joules)
     }
 
-    /// キロジュール単位で値を取得
     @inlinable
     public var kilojoules: Double {
         value(in: .kilojoules)
     }
 
-    /// メガジュール単位で値を取得
     @inlinable
     public var megajoules: Double {
         value(in: .megajoules)
@@ -167,13 +156,11 @@ extension Energy {
 
     // MARK: Calories
 
-    /// カロリー単位で値を取得
     @inlinable
     public var calories: Double {
         value(in: .calories)
     }
 
-    /// キロカロリー単位で値を取得
     @inlinable
     public var kilocalories: Double {
         value(in: .kilocalories)
@@ -183,9 +170,10 @@ extension Energy {
 // MARK: - Energy Formatting
 
 extension Energy {
-    /// 適切な単位で自動フォーマット（カロリー系）
+    /// The value on the calorie scale, choosing Mcal, kcal, or cal by magnitude.
     ///
-    /// 栄養学・フィットネス向けにカロリー系で表示する。
+    /// Switches to Mcal at 1000 kcal and down to cal below 1 kcal, always to one decimal place.
+    /// This is the form to use for nutrition and fitness figures.
     public var formattedCalories: String {
         let kcal = kilocalories
         if abs(kcal) >= 1000 {
@@ -197,9 +185,10 @@ extension Energy {
         }
     }
 
-    /// 適切な単位で自動フォーマット（ジュール系）
+    /// The value on the joule scale, choosing MJ, kJ, or J by magnitude.
     ///
-    /// 物理学・工学向けにジュール系で表示する。
+    /// Switches at 1 MJ and 1 kJ, always to two decimal places. This is the form to use for
+    /// physics and engineering figures.
     public var formattedJoules: String {
         let j = joules
         if abs(j) >= 1_000_000 {
@@ -211,7 +200,7 @@ extension Energy {
         }
     }
 
-    /// デフォルトのフォーマット（キロカロリー）
+    /// The default rendering, which is the calorie form rather than the joule form.
     public var formatted: String {
         formattedCalories
     }

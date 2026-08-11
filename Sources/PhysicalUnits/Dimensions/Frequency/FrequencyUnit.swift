@@ -1,45 +1,44 @@
 import Foundation
 
-/// 周波数の単位
+/// A unit of frequency: an SI prefix applied to the hertz.
 ///
-/// `MetricUnit<Hertz>` の型エイリアス。
-/// 接頭辞を変えることで、ヘルツ、キロヘルツ、メガヘルツなどを表現できる。
+/// Every case is a power of ten away from the hertz, so every conversion here is exact by
+/// definition. The factors are `Double`s, and only the non-negative powers of ten are exactly
+/// representable: `kilo` through `tera` scale exactly, while `milli` multiplies by a rounded
+/// factor.
+///
+/// Six prefixes get a shorthand below. ``MetricPrefix`` has fifteen cases in all, from `femto`
+/// (10⁻¹⁵) to `peta` (10¹⁵), and any of them can be passed directly: `FrequencyUnit(.peta)`.
 public typealias FrequencyUnit = MetricUnit<Hertz>
 
 // MARK: - Convenience Static Properties
 
 extension FrequencyUnit {
-    /// ヘルツ (Hz)
     @inlinable
     public static var hertz: FrequencyUnit {
         FrequencyUnit(.base)
     }
 
-    /// ミリヘルツ (mHz)
     @inlinable
     public static var millihertz: FrequencyUnit {
         FrequencyUnit(.milli)
     }
 
-    /// キロヘルツ (kHz)
     @inlinable
     public static var kilohertz: FrequencyUnit {
         FrequencyUnit(.kilo)
     }
 
-    /// メガヘルツ (MHz)
     @inlinable
     public static var megahertz: FrequencyUnit {
         FrequencyUnit(.mega)
     }
 
-    /// ギガヘルツ (GHz)
     @inlinable
     public static var gigahertz: FrequencyUnit {
         FrequencyUnit(.giga)
     }
 
-    /// テラヘルツ (THz)
     @inlinable
     public static var terahertz: FrequencyUnit {
         FrequencyUnit(.tera)
@@ -48,12 +47,13 @@ extension FrequencyUnit {
 
 // MARK: - Frequency Type Alias
 
-/// 周波数
+/// A frequency, stored internally in hertz.
 ///
-/// `Measurement<FrequencyUnit>` の型エイリアス。
-/// 周波数を型安全に表現する。
+/// `FrequencyOperators` connects this to `Duration` by reciprocal (`asPeriod`, `asFrequency`)
+/// and to `Angle` and `AngularSpeed` through 2π rad per cycle. None of those conversions
+/// applies a rounded literal; the only loss is `Double`'s π.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let radio = Frequency(88.1, unit: .megahertz)
 /// print(radio.kilohertz)  // 88100.0
@@ -66,43 +66,43 @@ public typealias Frequency = Measurement<FrequencyUnit>
 // MARK: - Frequency Convenience Accessors
 
 extension Frequency {
-    /// ヘルツ単位で値を取得
     @inlinable
     public var hertz: Double {
         value(in: .hertz)
     }
 
-    /// ミリヘルツ単位で値を取得
     @inlinable
     public var millihertz: Double {
         value(in: .millihertz)
     }
 
-    /// キロヘルツ単位で値を取得
     @inlinable
     public var kilohertz: Double {
         value(in: .kilohertz)
     }
 
-    /// メガヘルツ単位で値を取得
     @inlinable
     public var megahertz: Double {
         value(in: .megahertz)
     }
 
-    /// ギガヘルツ単位で値を取得
     @inlinable
     public var gigahertz: Double {
         value(in: .gigahertz)
     }
 
-    /// テラヘルツ単位で値を取得
     @inlinable
     public var terahertz: Double {
         value(in: .terahertz)
     }
 
-    /// 周期（秒）を取得
+    /// The length of one cycle in seconds, as a plain number.
+    ///
+    /// Returning `Double` drops the dimension, so nothing downstream catches a period used
+    /// where something else was meant. `asPeriod` in `FrequencyOperators` computes the same
+    /// reciprocal and hands back a typed `Duration`; prefer it.
+    ///
+    /// A zero frequency yields infinity rather than trapping, since this is `Double` division.
     @inlinable
     public var period: Double {
         1.0 / hertz
@@ -112,7 +112,9 @@ extension Frequency {
 // MARK: - Frequency Formatting
 
 extension Frequency {
-    /// 適切な単位で自動フォーマット
+    /// The value in the largest metric multiple that fits: THz from 10¹² Hz, then GHz, MHz, kHz, Hz, and mHz below 1 Hz.
+    ///
+    /// Two decimals down to Hz, three for mHz. Zero prints as `0.000 mHz`.
     public var formatted: String {
         let hz = hertz
         if abs(hz) >= 1e12 {

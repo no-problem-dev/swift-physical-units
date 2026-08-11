@@ -1,15 +1,21 @@
 import Foundation
 
-/// 時間の単位
+/// A unit of time, from SI-prefixed seconds up to days.
 ///
-/// SI 接頭辞付きの秒と、非 SI 単位（分、時間、日）を統合した単位型。
-/// 秒を基準単位として、すべての時間単位を表現する。
+/// The second is the base unit, so `coefficientToBase` always converts to seconds.
+/// Time is the one quantity here that people also count in sixties and twenty-fours:
+/// minutes, hours and days are not powers of ten and cannot be written as a prefixed second,
+/// which is why they are separate cases rather than another `MetricPrefix`.
 ///
-/// ## 設計思想
-/// 時間は他の物理量と異なり、60進法（分、時間）や24進法（日）が広く使われる。
-/// これらは SI 接頭辞では表現できないため、enum + associated value で実装している。
+/// ## Exactness
+/// 1 min = 60 s, 1 h = 3600 s and 1 d = 86400 s are exact by definition. The day here is the
+/// SI day of exactly 86400 s: it knows nothing about leap seconds, daylight saving or any other
+/// calendar rule, so reach for `Calendar` when you mean "the same time tomorrow".
+/// The SI prefixes are exact decimal factors, but the ones below one (`1e-3`, `1e-6`, `1e-9`)
+/// have no exact binary form and are held as the nearest `Double`, so a round trip through
+/// milliseconds is only good to `Double` precision.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let duration = Duration(90, unit: .minutes)
 /// print(duration.hours)   // 1.5
@@ -20,21 +26,21 @@ import Foundation
 /// ```
 @frozen
 public enum TimeUnit: Unit, Codable, Sendable, Hashable {
-    /// SI 接頭辞付きの秒
+    /// A second scaled by an SI prefix, such as `.seconds(.milli)` for milliseconds.
     case seconds(MetricPrefix)
 
-    /// 分（60秒）
+    /// A minute: exactly 60 seconds.
     case minutes
 
-    /// 時間（3600秒）
+    /// An hour: exactly 3600 seconds.
     case hours
 
-    /// 日（86400秒）
+    /// A day: exactly 86400 seconds, the SI day that ignores leap seconds and daylight saving.
     case days
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（秒）への変換係数
+    /// The factor that converts a value in this unit to seconds.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -49,7 +55,7 @@ public enum TimeUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
+    /// The symbol with the SI prefix applied: "ms", "s", "min", "h", "d".
     public var symbol: String {
         switch self {
         case .seconds(let prefix):
@@ -67,25 +73,21 @@ public enum TimeUnit: Unit, Codable, Sendable, Hashable {
 // MARK: - Convenience Static Properties
 
 extension TimeUnit {
-    /// 秒 (s)
     @inlinable
     public static var seconds: TimeUnit {
         .seconds(.base)
     }
 
-    /// ミリ秒 (ms)
     @inlinable
     public static var milliseconds: TimeUnit {
         .seconds(.milli)
     }
 
-    /// マイクロ秒 (μs)
     @inlinable
     public static var microseconds: TimeUnit {
         .seconds(.micro)
     }
 
-    /// ナノ秒 (ns)
     @inlinable
     public static var nanoseconds: TimeUnit {
         .seconds(.nano)
@@ -102,12 +104,15 @@ extension TimeUnit: CustomStringConvertible {
 
 // MARK: - Duration Type Alias
 
-/// 時間（継続時間）
+/// An elapsed span of time, stored in seconds.
 ///
-/// `Measurement<TimeUnit>` の型エイリアス。
-/// 時間を型安全に表現する。
+/// A type alias for `Measurement<TimeUnit>`. It is a plain span with no calendar attached:
+/// a day is 86400 s, which is not "the same clock time tomorrow" across a daylight-saving change.
 ///
-/// ## 使用例
+/// - Note: In files that import this package, `Duration` resolves to this type rather than the
+///   standard library's clock `Duration`. Write `Swift.Duration` when you mean that one.
+///
+/// ## Example
 /// ```swift
 /// let workout = Duration(45, unit: .minutes)
 /// print(workout.hours)    // 0.75
@@ -121,43 +126,36 @@ public typealias Duration = Measurement<TimeUnit>
 // MARK: - Duration Convenience Accessors
 
 extension Duration {
-    /// 秒単位で値を取得
     @inlinable
     public var seconds: Double {
         value(in: .seconds)
     }
 
-    /// ミリ秒単位で値を取得
     @inlinable
     public var milliseconds: Double {
         value(in: .milliseconds)
     }
 
-    /// マイクロ秒単位で値を取得
     @inlinable
     public var microseconds: Double {
         value(in: .microseconds)
     }
 
-    /// ナノ秒単位で値を取得
     @inlinable
     public var nanoseconds: Double {
         value(in: .nanoseconds)
     }
 
-    /// 分単位で値を取得
     @inlinable
     public var minutes: Double {
         value(in: .minutes)
     }
 
-    /// 時間単位で値を取得
     @inlinable
     public var hours: Double {
         value(in: .hours)
     }
 
-    /// 日単位で値を取得
     @inlinable
     public var days: Double {
         value(in: .days)
@@ -167,9 +165,11 @@ extension Duration {
 // MARK: - Duration Formatting
 
 extension Duration {
-    /// 適切な単位で自動フォーマット
+    /// A string in the largest unit the value reaches, to two decimal places.
     ///
-    /// 値の大きさに応じて適切な単位を自動選択。
+    /// The unit is chosen by magnitude: days from 86400 s up, then hours, minutes, seconds and
+    /// milliseconds. The sign does not affect the choice, so -90 s reads "-1.50 min", and
+    /// anything below a microsecond still prints as microseconds ("0.00 μs").
     public var formatted: String {
         let s = seconds
         if abs(s) >= 86400 {
@@ -187,9 +187,13 @@ extension Duration {
         }
     }
 
-    /// 時:分:秒 形式でフォーマット
+    /// A string as h:mm:ss, dropping the hours field for durations under an hour.
     ///
-    /// 例: "1:30:00" (1時間30分)
+    /// "1:30:00" is an hour and a half; "1:05" is 65 seconds, not 65 minutes. Seconds are
+    /// truncated toward zero, so 89.9 s reads "1:29".
+    ///
+    /// - Warning: A negative duration comes out malformed, as "-1:-30"; format its `magnitude`
+    ///   and add the sign yourself. A duration too large to fit `Int` seconds traps.
     public var formattedHMS: String {
         let totalSeconds = Int(seconds)
         let h = totalSeconds / 3600

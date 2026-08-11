@@ -1,20 +1,23 @@
 import Foundation
 
-/// メートル - 長さの SI 基本単位
+/// The meter (m), the SI base unit of length, as a base unit for metric prefixes.
 ///
-/// 光が真空中で 1/299,792,458 秒間に進む距離として定義される。
+/// One meter is the distance light travels in vacuum in 1/299,792,458 of a second — a
+/// definition that fixes the meter exactly, by fixing the speed of light at exactly
+/// 299,792,458 m/s.
 ///
-/// ## 使用例
+/// `LengthUnit` and `Length` are built on this type, so every length in the package converts
+/// through meters.
+///
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Meter>(.centi)  // センチメートル
+/// let unit = MetricUnit<Meter>(.centi)  // centimeters
 /// print(unit.symbol)  // "cm"
 /// ```
 @frozen
 public struct Meter: BaseUnit {
-    /// 単位記号
     public static let symbol = "m"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

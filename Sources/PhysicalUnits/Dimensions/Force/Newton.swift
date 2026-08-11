@@ -1,20 +1,22 @@
 import Foundation
 
-/// ニュートン - 力の SI 導出単位
+/// The newton (N), the SI derived unit of force, as a base unit for metric prefixes.
 ///
-/// 1 N = 1 kg⋅m⋅s⁻²
+/// 1 N = 1 kg⋅m⋅s⁻².
 ///
-/// ## 使用例
+/// - Note: This type only feeds `MetricUnit<Newton>`. The `Force` measurement type is built on
+///   the `ForceUnit` enum instead, so `Measurement<MetricUnit<Newton>>` and `Force` are
+///   separate types that do not mix and share no conversions.
+///
+/// ## Example
 /// ```swift
-/// let unit = MetricUnit<Newton>(.kilo)  // キロニュートン
+/// let unit = MetricUnit<Newton>(.kilo)  // kilonewtons
 /// print(unit.symbol)  // "kN"
 /// ```
 @frozen
 public struct Newton: BaseUnit {
-    /// 単位記号
     public static let symbol = "N"
 
-    /// デフォルトイニシャライザ
     @inlinable
     public init() {}
 }

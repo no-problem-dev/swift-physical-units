@@ -1,14 +1,22 @@
 import Foundation
 
-/// 電気抵抗の単位
+/// A unit of electrical resistance: an SI prefix applied to the ohm.
 ///
-/// `MetricUnit<Ohm>` の型エイリアス。
-/// 接頭辞を変えることで、オーム、キロオーム、メガオームなどを表現できる。
+/// Every case is a power of ten away from the ohm, so every conversion here is exact by
+/// definition. The factors are `Double`s, and only the non-negative powers of ten are exactly
+/// representable: `kilo`, `mega` and `giga` scale exactly, while `milli` multiplies by a
+/// rounded factor.
 ///
-/// ## オームの法則
-/// V = I × R （電圧 = 電流 × 抵抗）
+/// Five prefixes get a shorthand below. Their spelling is not uniform — `kilohms` elides the
+/// doubled o, while `megaohms` and `gigaohms` keep it. ``MetricPrefix`` has fifteen cases
+/// in all, from `femto` (10⁻¹⁵) to `peta` (10¹⁵), and any of them can be passed directly:
+/// `ResistanceUnit(.micro)`.
 ///
-/// ## 使用例
+/// ## Ohm's Law
+/// V = I × R. `ElectricityOperators` spells out all three rearrangements as typed operators, so
+/// `Voltage / Resistance` gives a `Current` and nothing has to be converted by hand.
+///
+/// ## Example
 /// ```swift
 /// let resistor = Resistance(4.7, unit: .kilohms)
 /// print(resistor.ohms)  // 4700.0
@@ -18,31 +26,29 @@ public typealias ResistanceUnit = MetricUnit<Ohm>
 // MARK: - Convenience Static Properties
 
 extension ResistanceUnit {
-    /// オーム (Ω)
     @inlinable
     public static var ohms: ResistanceUnit {
         ResistanceUnit(.base)
     }
 
-    /// ミリオーム (mΩ)
     @inlinable
     public static var milliohms: ResistanceUnit {
         ResistanceUnit(.milli)
     }
 
-    /// キロオーム (kΩ)
+    /// Kilohm (kΩ), exactly 1000 Ω.
+    ///
+    /// Spelled with a single o, unlike `megaohms` and `gigaohms`.
     @inlinable
     public static var kilohms: ResistanceUnit {
         ResistanceUnit(.kilo)
     }
 
-    /// メガオーム (MΩ)
     @inlinable
     public static var megaohms: ResistanceUnit {
         ResistanceUnit(.mega)
     }
 
-    /// ギガオーム (GΩ)
     @inlinable
     public static var gigaohms: ResistanceUnit {
         ResistanceUnit(.giga)
@@ -51,17 +57,19 @@ extension ResistanceUnit {
 
 // MARK: - Resistance Type Alias
 
-/// 電気抵抗
+/// A resistance, stored internally in ohms.
 ///
-/// `Measurement<ResistanceUnit>` の型エイリアス。
-/// 電気抵抗を型安全に表現する。
+/// Ohmic resistance, taken as constant: nothing here varies with temperature, frequency or
+/// applied voltage, and there is no reactance or impedance in the package to combine it with.
+/// `resistance(at:)` and `power(at:)` in `ElectricityOperators` carry the squared relations
+/// P = I²R and P = V²/R, which the typed operators cannot express.
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let resistor = Resistance(220, unit: .ohms)
 /// print(resistor.kilohms)  // 0.22
 ///
-/// // オームの法則を使用
+/// // Ohm's law
 /// let voltage = Voltage(5, unit: .volts)
 /// let current: Current = voltage / resistor  // 22.7 mA
 /// ```
@@ -70,31 +78,26 @@ public typealias Resistance = Measurement<ResistanceUnit>
 // MARK: - Resistance Convenience Accessors
 
 extension Resistance {
-    /// オーム単位で値を取得
     @inlinable
     public var ohms: Double {
         value(in: .ohms)
     }
 
-    /// ミリオーム単位で値を取得
     @inlinable
     public var milliohms: Double {
         value(in: .milliohms)
     }
 
-    /// キロオーム単位で値を取得
     @inlinable
     public var kilohms: Double {
         value(in: .kilohms)
     }
 
-    /// メガオーム単位で値を取得
     @inlinable
     public var megaohms: Double {
         value(in: .megaohms)
     }
 
-    /// ギガオーム単位で値を取得
     @inlinable
     public var gigaohms: Double {
         value(in: .gigaohms)
@@ -104,7 +107,10 @@ extension Resistance {
 // MARK: - Resistance Formatting
 
 extension Resistance {
-    /// 適切な単位で自動フォーマット
+    /// The value in the largest metric multiple that fits: GΩ from 10⁹ Ω, then MΩ, kΩ, Ω, and mΩ below 1 Ω.
+    ///
+    /// Always two decimals. There is no smaller unit than mΩ, so a microohm prints as
+    /// `0.00 mΩ`, and so does zero.
     public var formatted: String {
         let r = ohms
         if abs(r) >= 1e9 {
@@ -124,12 +130,18 @@ extension Resistance {
 // MARK: - Resistance Common Values
 
 extension Resistance {
-    /// LED 電流制限抵抗の代表値 (220Ω)
+    /// 220 Ω, a common series resistor for an LED on a 5 V rail.
+    ///
+    /// A convention rather than a derived value: the right resistor depends on the supply
+    /// voltage, the LED's forward voltage and the current you want through it.
     public static let led220 = Resistance(220, unit: .ohms)
 
-    /// 一般的なプルアップ抵抗値 (10kΩ)
+    /// 10 kΩ, the usual pull-up for a slow digital input.
     public static let pullUp10k = Resistance(10, unit: .kilohms)
 
-    /// 一般的なプルアップ抵抗値 (4.7kΩ)
+    /// 4.7 kΩ, the usual pull-up for an I²C bus at standard speed.
+    ///
+    /// Named for the E24 preferred value 4.7, not for anything computed. The value that
+    /// actually works depends on bus capacitance and clock rate.
     public static let pullUp4k7 = Resistance(4.7, unit: .kilohms)
 }

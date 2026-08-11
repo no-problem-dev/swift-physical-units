@@ -1,16 +1,18 @@
 import Foundation
 
-/// 速度の単位
+/// A unit of speed, convertible to and from metres per second.
 ///
-/// 速度は導出単位（長さ÷時間）で、複数の慣用単位がある。
-/// SI 基本単位はメートル毎秒 (m/s)。
+/// The base unit is m/s. Speed is a derived quantity (length ÷ time), so m/s is the coherent
+/// SI derived unit for it rather than an SI base unit.
 ///
-/// ## 変換係数（→ m/s）
-/// - km/h: 1 km/h = 1000/3600 m/s ≈ 0.2778 m/s
-/// - mph: 1 mph = 1609.344/3600 m/s ≈ 0.4470 m/s
-/// - knot: 1 knot = 1852/3600 m/s ≈ 0.5144 m/s
+/// ## Conversions (to m/s)
+/// - km/h = 1000/3600 m/s. An exact ratio that has no terminating decimal (≈ 0.2778); it is
+///   stored as the division, so no digits are thrown away.
+/// - mph = 1609.344/3600 m/s. Exact: 1 mile = 1609.344 m follows from 1 in = 25.4 mm exactly.
+/// - knot = 1852/3600 m/s. Exact: 1 nautical mile = 1852 m by international agreement. Again a
+///   ratio, not a terminating decimal (≈ 0.5144).
 ///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let running = Speed(10, unit: .kilometersPerHour)
 /// print(running.metersPerSecond)  // 2.778
@@ -20,32 +22,32 @@ import Foundation
 /// ```
 @frozen
 public enum SpeedUnit: Unit, Codable, Sendable, Hashable {
-    /// メートル毎秒 (m/s) - SI 基本単位
+    /// Metre per second (m/s), the base unit every other case converts against.
     case metersPerSecond
 
-    /// キロメートル毎時 (km/h)
+    /// Kilometre per hour (km/h), exactly 1000/3600 m/s.
     case kilometersPerHour
 
-    /// マイル毎時 (mph)
+    /// Statute mile per hour (mph), exactly 1609.344/3600 m/s.
     case milesPerHour
 
-    /// ノット (knot) - 海里毎時
+    /// Knot, one nautical mile per hour: exactly 1852/3600 m/s. Its symbol here is `kn`.
     case knots
 
     // MARK: - Constants
 
-    /// km/h → m/s 変換係数
+    /// km/h in m/s: the exact ratio 1000/3600, kept as a division rather than a rounded decimal.
     public static let kmhToMs: Double = 1000.0 / 3600.0
 
-    /// mph → m/s 変換係数（1 mile = 1609.344 m）
+    /// mph in m/s: the exact ratio 1609.344/3600, since 1 mile = 1609.344 m exactly.
     public static let mphToMs: Double = 1609.344 / 3600.0
 
-    /// knot → m/s 変換係数（1 nautical mile = 1852 m）
+    /// knot in m/s: the exact ratio 1852/3600, since 1 nautical mile = 1852 m exactly.
     public static let knotToMs: Double = 1852.0 / 3600.0
 
     // MARK: - Unit Protocol
 
-    /// 基準単位（m/s）への変換係数
+    /// The multiplier that turns a value in this unit into m/s.
     @inlinable
     public var coefficientToBase: Double {
         switch self {
@@ -60,7 +62,6 @@ public enum SpeedUnit: Unit, Codable, Sendable, Hashable {
         }
     }
 
-    /// 単位記号
     public var symbol: String {
         switch self {
         case .metersPerSecond:
@@ -85,12 +86,9 @@ extension SpeedUnit: CustomStringConvertible {
 
 // MARK: - Speed Type Alias
 
-/// 速度
+/// A speed, stored internally in m/s.
 ///
-/// `Measurement<SpeedUnit>` の型エイリアス。
-/// 速度を型安全に表現する。
-///
-/// ## 使用例
+/// ## Example
 /// ```swift
 /// let car = Speed(100, unit: .kilometersPerHour)
 /// print(car.metersPerSecond)  // 27.78
@@ -103,25 +101,21 @@ public typealias Speed = Measurement<SpeedUnit>
 // MARK: - Speed Convenience Accessors
 
 extension Speed {
-    /// メートル毎秒単位で値を取得
     @inlinable
     public var metersPerSecond: Double {
         value(in: .metersPerSecond)
     }
 
-    /// キロメートル毎時単位で値を取得
     @inlinable
     public var kilometersPerHour: Double {
         value(in: .kilometersPerHour)
     }
 
-    /// マイル毎時単位で値を取得
     @inlinable
     public var milesPerHour: Double {
         value(in: .milesPerHour)
     }
 
-    /// ノット単位で値を取得
     @inlinable
     public var knots: Double {
         value(in: .knots)
@@ -131,7 +125,11 @@ extension Speed {
 // MARK: - Speed Formatting
 
 extension Speed {
-    /// 適切な単位で自動フォーマット
+    /// The value as km/h at 100 m/s and above, otherwise as m/s — two decimals from 1 m/s up, three below.
+    ///
+    /// Only those two units are ever chosen: mph and knots never appear, so a speed entered in
+    /// them comes back out metric. The 100 m/s cut-off is 360 km/h, so ordinary road and wind
+    /// speeds print as m/s rather than km/h.
     public var formatted: String {
         let ms = metersPerSecond
         if abs(ms) >= 100 {
@@ -147,12 +145,15 @@ extension Speed {
 // MARK: - Speed Special Values
 
 extension Speed {
-    /// 光速 (真空中)
+    /// The speed of light in vacuum, 299,792,458 m/s — exact, because the metre is defined from it.
     public static let speedOfLight = Speed(299_792_458, unit: .metersPerSecond)
 
-    /// 音速 (20°C の空気中)
+    /// The speed of sound in air at 20 °C, 343 m/s — rounded, and it shifts with temperature.
     public static let speedOfSound = Speed(343, unit: .metersPerSecond)
 
-    /// マッハ 1（音速）
+    /// Mach 1 as a fixed 343 m/s, the same value as the speed of sound above.
+    ///
+    /// Real Mach 1 follows the local speed of sound and drops with altitude and cold, so this
+    /// value only holds near sea level at 20 °C.
     public static var mach1: Speed { speedOfSound }
 }

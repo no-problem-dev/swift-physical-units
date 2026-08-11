@@ -3,14 +3,14 @@ import Foundation
 // MARK: - Sequence Extensions
 
 extension Sequence {
-    /// Measurement の合計を計算
+    /// Adds every element, returning zero for an empty sequence.
     ///
-    /// `AdditiveArithmetic` に準拠しているため、`reduce` で簡単に合計できる。
+    /// The addition happens in base units and left to right, so a long sequence of very
+    /// different magnitudes accumulates `Double` rounding in the usual way.
     ///
-    /// ## 使用例
     /// ```swift
     /// let masses = [Mass(1, unit: .kilograms), Mass(500, unit: .grams)]
-    /// let total = masses.sum()  // 1500g
+    /// let total = masses.sum()  // 1500 g
     /// ```
     @inlinable
     public func sum<U: Unit>() -> Measurement<U> where Element == Measurement<U> {
@@ -21,11 +21,11 @@ extension Sequence {
 // MARK: - Collection Extensions
 
 extension Collection {
-    /// Measurement の平均を計算
+    /// The arithmetic mean, or `nil` for an empty collection.
     ///
-    /// 空のコレクションの場合は `nil` を返す。
+    /// It sums first and then divides once, so an empty collection is the only case that
+    /// has no answer.
     ///
-    /// ## 使用例
     /// ```swift
     /// let times = [Duration(30, unit: .seconds), Duration(60, unit: .seconds)]
     /// let avg = times.average()  // 45 seconds
@@ -36,19 +36,25 @@ extension Collection {
         return sum() / Double(count)
     }
 
-    /// Measurement の最大値を取得
+    /// The largest element, or `nil` for an empty collection.
+    ///
+    /// A spelled-out name for the standard library's `max()`, which reads badly next to a
+    /// unit type.
     @inlinable
     public func maximum<U: Unit>() -> Measurement<U>? where Element == Measurement<U> {
         self.max()
     }
 
-    /// Measurement の最小値を取得
+    /// The smallest element, or `nil` for an empty collection.
     @inlinable
     public func minimum<U: Unit>() -> Measurement<U>? where Element == Measurement<U> {
         self.min()
     }
 
-    /// Measurement の範囲（最大 - 最小）を取得
+    /// The spread between the largest and smallest element, or `nil` for an empty collection.
+    ///
+    /// This is a single measurement, not a Swift `Range`. It walks the collection twice,
+    /// once for each end.
     @inlinable
     public func range<U: Unit>() -> Measurement<U>? where Element == Measurement<U> {
         guard let max = maximum(), let min = minimum() else { return nil }
@@ -59,21 +65,23 @@ extension Collection {
 // MARK: - Numeric Literals Support
 
 extension Measurement where UnitType: Unit {
-    /// 整数リテラルから基準単位で初期化
+    /// Reads an integer as a number of grams.
     ///
-    /// 値は基準単位（`MassUnit` なら gram、`LengthUnit` なら meter）として解釈される。
-    /// 明示的な単位指定（`Mass(70, unit: .kilograms)` など）を推奨する。
+    /// Despite the label, this is an ordinary initializer. ``Measurement`` does not conform
+    /// to `ExpressibleByIntegerLiteral` anywhere in this package, so `let m: Mass = 5` does
+    /// not compile — only the explicit `Mass(integerLiteral: 5)` does. Prefer naming the
+    /// unit, as in `Mass(5, unit: .kilograms)`, which reads the same everywhere and does
+    /// not depend on knowing which unit is the base one.
     ///
-    /// ## 設計上の制限
-    /// `ExpressibleByIntegerLiteral` 準拠は `MassUnit` と `LengthUnit` のみに限定している。
-    /// 理由: Swift のプロトコル準拠は型単位（`Measurement<UnitType>` ごと）に必要であり、
-    /// 全次元に追加するとリテラル `0` の型推論があいまいになる。
-    /// 必要な次元は都度 `Measurement<SomeUnit>(baseValue: Double(n))` で初期化する。
+    /// Only mass and length have this initializer. Making the type conform for every
+    /// dimension would leave the type of a bare `0` ambiguous, since the conformance has to
+    /// be declared per `Measurement<UnitType>`.
     @inlinable
     public init(integerLiteral value: Int) where UnitType == MassUnit {
         self.init(baseValue: Double(value))
     }
 
+    /// Reads an integer as a number of meters, with the same caveats as the mass overload.
     @inlinable
     public init(integerLiteral value: Int) where UnitType == LengthUnit {
         self.init(baseValue: Double(value))
