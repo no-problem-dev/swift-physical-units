@@ -3,7 +3,7 @@
 物理量を Swift の型として扱う。単位の整合性はコンパイラが検査し、実行時の測定値は 8 バイトのままにする。
 
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
-[![Platforms](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20watchOS%20|%20tvOS%20|%20visionOS-blue.svg)](https://developer.apple.com/swift/)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20watchOS%20|%20tvOS%20|%20visionOS%20%7C%20Linux-blue.svg)](https://developer.apple.com/swift/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 [English](./README.md) | 日本語
@@ -66,6 +66,7 @@ dependencies: [
 
 - Swift 6.0+
 - iOS 17+ / macOS 14+ / watchOS 10+ / tvOS 17+ / visionOS 1+
+- Linux
 
 ## 開発に参加する
 
