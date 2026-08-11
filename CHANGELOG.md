@@ -23,6 +23,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-07-19
+
+### Changed
+- Documentation comments and DocC rewritten in Japanese, and the README unified as a Japanese
+  and English pair. The module documentation was expanded to cover every dimension and every
+  operator, and DocC articles were added.
+- CI workflows synced to the standard SSOT template (tests + release-on-tag; the old
+  auto-release is gone). DocC is built on macos-26 / Xcode 26 (Swift 6.2) and deployed to
+  GitHub Pages via `actions/deploy-pages`.
+
 ## [1.0.0] - 2025-12-31
 
 ### Added
@@ -42,4 +52,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test suite with 361 tests
 - DocC documentation support
 
+[1.0.1]: https://github.com/no-problem-dev/swift-physical-units/compare/v1.0.0...1.0.1
 [1.0.0]: https://github.com/no-problem-dev/swift-physical-units/releases/tag/v1.0.0
