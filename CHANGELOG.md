@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-11-08
+
+### Changed
+
+- swift-docc-plugin への依存を外した（DocC は Xcode で開く）
+
 ## [2.0.0] - 2026-08-11
 
 `Duration.formattedHMS` now returns `String?`. It returned a malformed string for a
