@@ -42,9 +42,9 @@ print(speed.kilometersPerHour)   // 50.0
 
 API リファレンスとガイドは DocC カタログから公開している。
 
-- [PhysicalUnits](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/) — リファレンス全体
-- [Getting Started](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/gettingstarted) — 単位変換・演算・温度・コレクション操作
-- [Architecture](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/architecture) — 層の組み立て方、どの変換が厳密でどれが丸めか、コンパイル時検査がどこで止まるか
+- [PhysicalUnits](Sources/PhysicalUnits/Documentation.docc) — リファレンス全体
+- [Getting Started](Sources/PhysicalUnits/Documentation.docc/GettingStarted.md) — 単位変換・演算・温度・コレクション操作
+- [Architecture](Sources/PhysicalUnits/Documentation.docc/Architecture.md) — 層の組み立て方、どの変換が厳密でどれが丸めか、コンパイル時検査がどこで止まるか
 
 ## インストール
 

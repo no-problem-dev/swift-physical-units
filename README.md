@@ -42,9 +42,9 @@ print(speed.kilometersPerHour)   // 50.0
 
 The API reference and guides are published from the DocC catalog:
 
-- [PhysicalUnits](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/) — full reference
-- [Getting Started](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/gettingstarted) — conversions, arithmetic, temperature, collections
-- [Architecture](https://no-problem-dev.github.io/swift-physical-units/documentation/physicalunits/architecture) — how the layers fit together, which conversions are exact, and where compile-time checking stops
+- [PhysicalUnits](Sources/PhysicalUnits/Documentation.docc) — full reference
+- [Getting Started](Sources/PhysicalUnits/Documentation.docc/GettingStarted.md) — conversions, arithmetic, temperature, collections
+- [Architecture](Sources/PhysicalUnits/Documentation.docc/Architecture.md) — how the layers fit together, which conversions are exact, and where compile-time checking stops
 
 ## Installation
 
